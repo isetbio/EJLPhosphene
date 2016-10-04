@@ -138,30 +138,40 @@ recons_stim_on_off_dropout = cell(length(innerRetina2.mosaic),1);
 movrecons_on_off_dropout = cell(length(innerRetina2.mosaic),1);
 for mosaicInd = 1:length(innerRetina.mosaic)
     
-    % on Parasol
     blocklength = 100;
+    sizeSpikes = floor([ size(y{mosaicInd},2) size(y2{mosaicInd},2) size(y3{mosaicInd},2) size(y4{mosaicInd},2)  ]/blocklength);
+    
+    % on Parasol
     spikesout = (y{mosaicInd});%double(matfOff.spikesoutsm);
     numcells1 = 36;
 %     downSampRespSetLength
-    spikeRespOn= downSampResp(spikesout, numcells1, floor(size(spikesout,2)/blocklength));
+
+    spikeRespOn = zeros(size(spikesout,1), max(sizeSpikes));
+
+    spikeRespOn(:,1:floor(size(spikesout,2)/blocklength)) = downSampResp(spikesout, numcells1, floor(size(spikesout,2)/blocklength));
 %     spikeRespOn= zeros(size(downSampResp(spikesout, numcells1, blocklength)));
     
     % off Parasol
     numcells2 = 64;
     spikesout2 = (y2{mosaicInd});%double(matfOff.spikesoutsm);
-    spikeRespOff = ((downSampResp(spikesout2, numcells2, floor(size(spikesout,2)/blocklength))));
+    spikeRespOff = zeros(size(spikesout2,1), max(sizeSpikes));
+    spikeRespOff(:,1:floor(size(spikesout2,2)/blocklength)) = ((downSampResp(spikesout2, numcells2, floor(size(spikesout2,2)/blocklength))));
 %     spikeRespOff = zeros(size(downSampResp(spikesout2, numcells2, blocklength)));
 
     % off Midget
     numcells3 = 225;
     spikesout3 = (y3{mosaicInd});%double(matfOff.spikesoutsm);
-    spikeRespOffM = ((downSampResp(spikesout3, numcells3, floor(size(spikesout,2)/blocklength))));
+    
+    spikeRespOffM = zeros(size(spikesout3,1), max(sizeSpikes));
+    spikeRespOffM(:,1:floor(size(spikesout3,2)/blocklength)) = ((downSampResp(spikesout3, numcells3, floor(size(spikesout3,2)/blocklength))));
 %     spikeRespOffM = zeros(size(downSampResp(spikesout3, numcells3, blocklength)));
 
     % on Midget
     numcells4 = 144;
     spikesout4 = (y4{mosaicInd});%double(matfOff.spikesoutsm);
-    spikeRespOnM = ((downSampResp(spikesout4, numcells4, floor(size(spikesout,2)/blocklength))));
+    
+    spikeRespOnM = zeros(size(spikesout4,1), max(sizeSpikes));
+    spikeRespOnM(:,1:floor(size(spikesout4,2)/blocklength)) = ((downSampResp(spikesout4, numcells4, floor(size(spikesout4,2)/blocklength))));
 %     spikeRespOnM = zeros(size(downSampResp(spikesout4, numcells4, blocklength)));
         
     % spikesout = vertcat(onSR(:,1:15000), offSR(:,1:15000), onPSR(:,1:15000), offPSR(:,1:15000));
