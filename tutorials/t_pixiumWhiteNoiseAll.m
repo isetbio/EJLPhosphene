@@ -22,7 +22,7 @@ fov = 1.6;
 
 % Stimulus length = nSteps*nBlocks;
 nSteps = 12000;
-nBlocks = 1;
+nBlocks = 12;
 
 %% Load image
 clear params
@@ -77,34 +77,36 @@ retinalPatchSize = osGet(os,'size');
 
 %% Build RGC array
 
-clear paramsIR innerRetina
-paramsIR.name    = 'Macaque inner retina 1'; % This instance
-paramsIR.eyeSide   = 'left';   % Which eye
-paramsIR.eyeRadius = 4;        % Radius in mm
-paramsIR.eyeAngle  = 90;       % Polar angle in degrees
+% clear paramsIR innerRetina
+% paramsIR.name    = 'Macaque inner retina 1'; % This instance
+% paramsIR.eyeSide   = 'left';   % Which eye
+% paramsIR.eyeRadius = 4;        % Radius in mm
+% paramsIR.eyeAngle  = 90;       % Polar angle in degrees
+% 
+% model   = 'LNP';    % Computational model
+% innerRetina = irCreate(os,paramsIR);
+% innerRetina = rgcMosaicCreate(innerRetina,'type','onParasol','model',model);
+% innerRetina = rgcMosaicCreate(innerRetina,'type','offParasol','model',model);
+% innerRetina = rgcMosaicCreate(innerRetina,'type','offMidget','model',model);
+% innerRetina = rgcMosaicCreate(innerRetina,'type','onMidget','model',model);
+% 
+% % innerRetina = rgcMosaicCreate(innerRetina,'type','sbc','model',model);
+% 
+% % innerRetina.mosaic{1}.mosaicSet('numberTrials',1);
+% % innerRetina.mosaic{2}.mosaicSet('numberTrials',1);
+% % innerRetina.mosaic{3}.mosaicSet('numberTrials',1);
+% % innerRetina.mosaic{4}.mosaicSet('numberTrials',1);
+% % innerRetina.mosaic{5}.mosaicSet('numberTrials',1);
+% 
+% % irPlot(innerRetina,'mosaic');
+% 
+% filenameRGC = [reconstructionRootPath '\dat\mosaic_all_overlap0.mat'];
+% 
+% save(filenameRGC, 'innerRetina');
 
-model   = 'LNP';    % Computational model
-innerRetina = irCreate(os,paramsIR);
-innerRetina = rgcMosaicCreate(innerRetina,'type','onParasol','model',model);
-innerRetina = rgcMosaicCreate(innerRetina,'type','offParasol','model',model);
-innerRetina = rgcMosaicCreate(innerRetina,'type','offMidget','model',model);
-innerRetina = rgcMosaicCreate(innerRetina,'type','onMidget','model',model);
+filenameRGC = [reconstructionRootPath '\dat\mosaic_all_overlap0.mat'];
 
-% innerRetina = rgcMosaicCreate(innerRetina,'type','sbc','model',model);
-
-innerRetina.mosaic{1}.mosaicSet('numberTrials',1);
-innerRetina.mosaic{2}.mosaicSet('numberTrials',1);
-innerRetina.mosaic{3}.mosaicSet('numberTrials',1);
-innerRetina.mosaic{4}.mosaicSet('numberTrials',1);
-% innerRetina.mosaic{5}.mosaicSet('numberTrials',1);
-
-% irPlot(innerRetina,'mosaic');
-
-filenameRGC = [reconstructionRootPath '\dat\mosaic_all.mat'];
-
-save(filenameRGC, 'innerRetina');
-
-for blockNum =1:nBlocks
+for blockNum = 0+[1:nBlocks]
     
     % clear psthNorm spikesout spikesoutM spikesoutsm whiteNoiseSmall whiteNoise iStim absorptions innerRetina
     
@@ -148,7 +150,7 @@ for blockNum =1:nBlocks
     
     spikesoutsm = uint8(spikesoutmat);
     
-    filename1 = [reconstructionRootPath '\dat\WNstim_response_block_' num2str(blockNum) '.mat'];
+    filename1 = [reconstructionRootPath '\dat\WNstim_response_stx2_block_' num2str(blockNum) '.mat'];
     
     save(filename1, 'spikesoutsm','whiteNoiseSmall');
     toc
