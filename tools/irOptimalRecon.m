@@ -115,7 +115,17 @@ end
 
 %%
 
+% sep 25
 load('/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/sep25/filters_may26_parasol_midget_combined_svd_3000_len_100.mat');
+
+% rdt = RdtClient('isetbio');
+% rdt.crp('/resources/data/reconstruction');
+% data = rdt.readArtifact('filters_may26_parasol_midget_combined_svd_3000_len_100', 'type', 'mat');
+% filterMat = data.filterMat; clear data;
+
+% oct 8
+% load('/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/oct8/filters_may26_fine_all2_svd_3000_len_100.mat')
+% load('/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/oct8/filters_may26_fine_all2_svd_1500_len_100.mat')
 
 % load('C:\Users\James\Documents\GitHub\RGC-ReconAdd\output\svd_reconstruct_shorttrain_midgets\filters_may26_on_long300_shorttime_svd_1000_len_100.mat')
 %     numbins = 12;
@@ -175,10 +185,16 @@ for mosaicInd = 1:length(innerRetina.mosaic)
 %     spikeRespOnM = zeros(size(downSampResp(spikesout4, numcells4, blocklength)));
         
     % spikesout = vertcat(onSR(:,1:15000), offSR(:,1:15000), onPSR(:,1:15000), offPSR(:,1:15000));
+    
+    % whole mosaic
     spikeRespOnOff =vertcat(spikeRespOnM,spikeRespOffM, spikeRespOn,spikeRespOff);
+    % only midgets
+%     spikeRespOnOff =vertcat(spikeRespOnM,spikeRespOffM, zeros(size(spikeRespOn)),zeros(size(spikeRespOff)));
+    % only parasols
+%     spikeRespOnOff =vertcat(zeros(size(spikeRespOnM)),zeros(size(spikeRespOffM)), ((spikeRespOn)),((spikeRespOff)));
     
     numbins = 8;
-      filterMatInd = find(abs(filterMat)<0.005); filterMat2 = filterMat; filterMat2(filterMatInd)=0;
+      filterMatInd = find(abs(filterMat)<0.002); filterMat2 = filterMat; filterMat2(filterMatInd)=0;
     recons_stim_on_off{mosaicInd,1} = reconsFromFiltLen(filterMat2, spikeRespOnOff, numbins);      
     movrecons_on_off_full{mosaicInd,1} = reshape(recons_stim_on_off{mosaicInd,1},96,96,size(recons_stim_on_off{mosaicInd,1},2));  
     

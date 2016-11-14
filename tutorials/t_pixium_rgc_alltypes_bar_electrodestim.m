@@ -330,6 +330,7 @@ paramsIR.eyeAngle  = 90;       % Polar angle in degrees
 % load('/Users/james/Documents/MATLAB/RGC-Reconstruction/dat/WNstim_response_OnParasol_RGC.mat')
 
 
+rdt = RdtClient('isetbio');
 
 filenameRGC = ['/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/sep25/WNstim_response_OffMidget_RGC.mat'];
 load(filenameRGC);
@@ -644,7 +645,7 @@ for frame1 = [1:size(movieStitch,3)-1]
 drawnow
 
     F = getframe(h1);
-    writeVideo(vObj,F);
+%     writeVideo(vObj,F);
 end
 end
 

@@ -126,8 +126,9 @@ os = osSet(os, 'patchSize', retinalPatchWidth);
 timeStep = sensorGet(movingBar.absorptions,'time interval','sec');
 os = osSet(os, 'timeStep', timeStep);
 
-movingBar.sceneRGB = (contrastElectrode)*(movingBar.sceneRGB - 0.5)+0.5;
-os = osSet(os, 'rgbData', movingBar.sceneRGB);
+% movingBar.sceneRGB = (contrastElectrode)*(movingBar.sceneRGB - 0.5)+0.5;
+sceneRGB_pros = (contrastElectrode)*(movingBar.sceneRGB - 0.5)+0.5;
+os = osSet(os, 'rgbData', sceneRGB_pros);
 
 sceneRGB_Healthy = (contrastHealthy)*(movingBar.sceneRGB - 0.5)+0.5;
 osHealthy = os;

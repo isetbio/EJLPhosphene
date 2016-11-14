@@ -49,7 +49,7 @@ freqL = 5%[5 8 2 12]
 clear electrodeArray
 % Electrode size
 % Set the size of implant pixels
-electrodeArray.width = 2*15e-6; % meters
+electrodeArray.width = 1*15e-6; % meters
 % electrodeArray.width = 140e-6; % meters
  
 % Retinal patch eccentricity
@@ -60,90 +60,56 @@ patchEccentricity = 4; % mm
 fov = 1.6*2/3;
 
 % Stimulus length
-nSteps = 520;
-
+nSteps = 1;
+r
 % Activation curve
 
 % Spatial activation of electrode
 
 % Electrode PWM 
 
-percentDead = 0;
+percentDead = 0.5;
 %% Load image
+clear params
+% One frame of a moving bar stimulus
+% Set parameters for size
+% params.nSteps = nSteps;
+params.barWidth = 20;
+params.row = 96;
+params.col = 96;
+params.fov = fov;
+% params.freq = freqL; % Hz grating frequency
+% % params.vfov = 0.7;
+params.startFrames = 0;
+params.endFrames = 0;
+movingBar = ieStimulusBarSensor(params);
+iStim = movingBar;
+tuningWoffElec = 1;
+tuningWoffHealthy = 1;
 
-% clear params
-% % One frame of a moving bar stimulus
-% % Set parameters for size
-% % params.nSteps = nSteps;
-% params.barWidth = 20;
-% params.row = 96;
-% params.col = 96;
-% params.fov = fov;
-% % params.freq = freqL; % Hz grating frequency
-% % % params.vfov = 0.7;
-% params.startFrames = 0;
-% params.endFrames = 0;
-% movingBar = ieStimulusBarSensor(params);
-% iStim = movingBar;
-% tuningWoffElec = 1;
-% tuningWoffHealthy = 1;
-% 
 pulseFreq = 25; % Hz, electrode pulse frequency
-% 
+pulseDuration = 1; % set from 0 - 1
+
 contrastHealthy = 1;
 contrastElectrode = 1;
-% %%% Grating subunit stimulus
-% 
-% % params.barWidth = bwL;
-% % iStim = ieStimulusGratingSubunit(params);
-% 
-% % iStim = iStimC;
-% absorptions = iStim.absorptions;
-% % movingBar = iStim;
-% 
-% nSteps = size(iStim.sceneRGB,3);
-% params.nSteps = nSteps;
-% 
-% size(iStim.sceneRGB)
+%%% Grating subunit stimulus
 
+% params.barWidth = bwL;
+% iStim = ieStimulusGratingSubunit(params);
 
-%%
+% iStim = iStimC;
+absorptions = iStim.absorptions;
+% movingBar = iStim;
 
+nSteps = size(iStim.sceneRGB,3);
+params.nSteps = nSteps;
 
-% Length of WN movie is 1200, take nFrames to limit natural movie to same length
-% nFrames = 3600; 
-% testmovieshort = double(testmovie.matrix(:,:,1:nFrames)); 
-load('EJLPhosphene/dat/stimuli/hallMovie.mat')
-testmovieshort = vidFrame; clear vidFrame;
-% Generate display, scene, oi, sensor
-paramsStim.nsteps = 1;%nFrames;%size(testmovieshort,3);
-%  Bipolar filter is setfor 0.001 sec, so it needs to be 0.001
-paramsStim.timeInterval = 1/125;%0.001; % sec
-paramsStim.expTime = 1/125;%0.001; % sec
-nFrames = nSteps;
-% % For 2013-08-19-6
-% r = 12 mm = 36 degs;
-% theta = 330 degs;
-% side = 'left';
-paramsStim.nsteps = nFrames;
-paramsStim.fov = 8;
-paramsStim.radius = 36/3*1e-6;
-paramsStim.theta = 330;
-paramsStim.side = 'left';
-paramsStim.fov = fov;
-% iStim = ieStimulusMovie(testmovieshort(:,:,1:nFrames),paramsStim);
-iStim = ieStimulusMovie(testmovieshort(96+[1:96],96+[1:96],1:nFrames),paramsStim);
-
-paramsStim.nsteps = 10;
-iStim = ieStimulusMovieCMosaic(testmovieshort(96+[1:96],96+[1:96],1:10),paramsStim);
-
-iStim.absorptions = iStim.sensor;
-movingBar = iStim;
+size(iStim.sceneRGB)
 %% Show raw stimulus for osIdentity
 % figure;
 % for frame1 = 1:size(movingBar.sceneRGB,3)
 %     imagesc(squeeze(movingBar.sceneRGB(:,:,frame1,:)));
-%     colormap gray; drawnow;   
+%     colormap gray; drawnow;
 % end
 % close;
 
@@ -240,7 +206,7 @@ electrodeArray.spatialWeight = fspecial('Gaussian', activationWindow, activation
 fullStimulus = osGet(os,'rgbData');
 
 % Find electrode activations by taking mean within window
-for frame = 1:paramsStim.nsteps
+for frame = 1:params.nSteps
     for xPos = 1:numberElectrodesX
         for yPos = 1:numberElectrodesY
             % Xcoords of window for stimulus
@@ -255,7 +221,7 @@ for frame = 1:paramsStim.nsteps
             if imageCoordY2 > size(fullStimulus,1); imageCoordY2 = size(fullStimulus,1); end;
             % Pull out piece of stimulus and take mean
             electrodeStimulus = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2,frame,:));
-            electrodeArray.activation(xPos,yPos,frame) = mean(electrodeStimulus(:));
+            electrodeArray.activation(xPos,yPos,frame) = pulseDuration*mean(electrodeStimulus(:));
             
 %             sizeES = size(electrodeStimulus);
 %             electrodeArray.activation(xPos,yPos,frame) = min([ mean(electrodeStimulus(:,1:floor(sizeES(2)/2))) mean(electrodeStimulus(:,ceil(sizeES(2)/2):sizeES(2)))]);
@@ -324,6 +290,79 @@ end
 % electrodeArray.activation(4,:,24:28) = 0.5;
 % electrodeArray.activation(4,:,44:48) = 0.75;
 % electrodeArray.activation(4,:,64:68) = 1;
+
+electrodeArray.activation(:) = 0;
+
+% % moving bar
+% for telec = 1:25
+%     electrodeArray.activation(telec,:,5*(telec-1)+1:5*telec) = 1;
+% end
+
+% full field
+intervalSteps = 10;
+telec = 2;
+electrodeArray.activation(:,:,intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+
+% half field 1
+telec = telec+2;
+electrodeArray.activation(:,1:round(numberElectrodesY/2)-1,intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+
+% % half field 2
+telec = telec+2;
+electrodeArray.activation(:,round(numberElectrodesY/2):end,intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+
+% % half field 3
+% telec = telec+2;
+% electrodeArray.activation(1:12,:,intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+
+% % half field 4
+% telec = telec+2;
+% electrodeArray.activation(13:end,:,intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+
+%  quarter field 1
+telec = telec+2;
+electrodeArray.activation(round(numberElectrodesX/2):end,1:round(numberElectrodesY/2)-1,intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+
+%  quarter field 2
+telec = telec+2;
+electrodeArray.activation(1:round(numberElectrodesX/2)-1,round(numberElectrodesY/2):end,intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+
+% subsets of six at four points
+% point 1
+telec = telec+2;
+centerv = [round(numberElectrodesX/3) round(numberElectrodesY/3)]; hexcenter = [];
+cctr = 0; for c1 = -1:1; for c2 = -1:1; cctr = cctr+1; hexcenter(cctr,:) = [centerv(1)+c1 centerv(2)+c2]; end; end;
+electrodeArray.activation(hexcenter(:,1),hexcenter(:,2),intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+% electrodeArray.activation([1:2 end-1:end],:,intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+% electrodeArray.activation(:,[1:2 end-1:end],intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+% point 2
+centerv = [round(numberElectrodesX/3) round(2*numberElectrodesY/3)]; hexcenter = [];
+cctr = 0; for c1 = -1:1; for c2 = -1:1; cctr = cctr+1; hexcenter(cctr,:) = [centerv(1)+c1 centerv(2)+c2]; end; end;
+electrodeArray.activation(hexcenter(:,1),hexcenter(:,2),intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+% electrodeArray.activation([1:2 end-1:end],:,intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+% electrodeArray.activation(:,[1:2 end-1:end],intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+% point 3
+centerv = [round(2*numberElectrodesX/3)-1 round(numberElectrodesY/3)]; hexcenter = [];
+cctr = 0; for c1 = -1:1; for c2 = -1:1; cctr = cctr+1; hexcenter(cctr,:) = [centerv(1)+c1 centerv(2)+c2]; end; end;
+electrodeArray.activation(hexcenter(:,1),hexcenter(:,2),intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+% electrodeArray.activation([1:2 end-1:end],:,intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+% electrodeArray.activation(:,[1:2 end-1:end],intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+% point 4
+centerv = [round(2*numberElectrodesX/3)-1 round(2*numberElectrodesY/3)]; hexcenter = [];
+cctr = 0; for c1 = -1:1; for c2 = -1:1; cctr = cctr+1; hexcenter(cctr,:) = [centerv(1)+c1 centerv(2)+c2]; end; end;
+electrodeArray.activation(hexcenter(:,1),hexcenter(:,2),intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+% electrodeArray.activation([1:2 end-1:end],:,intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+% electrodeArray.activation(:,[1:2 end-1:end],intervalSteps*(telec-1)+1:intervalSteps*telec) = 1;
+
+%%%% Border activation
+xborder = 4; yborder = 3;
+electrodeArray.activation([1:xborder end-xborder+1:end],:,:) = .25;
+electrodeArray.activation(:,[1:yborder end-yborder+1:end],:) = .25;
+
+telec = telec+2;
+electrodeArray.activation(:,:,intervalSteps*(telec-1)+1:intervalSteps*telec) = 0;
+
+figure; ieMovie(electrodeArray.activation);
 %% Add 5 Hz spiking of stimulus
 
 % Right now the electrode sampling is at 0.01 s = 100 Hz
@@ -359,53 +398,21 @@ paramsIR.eyeAngle  = 90;       % Polar angle in degrees
 
 
 rdt = RdtClient('isetbio');
+
+filenameRGC = ['/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/sep25/WNstim_response_OffMidget_RGC.mat'];
+load(filenameRGC);
+innerRetina3 = innerRetina;
+
+filenameRGC = ['/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/sep25/WNstim_response_OnMidget_RGC.mat'];
+load(filenameRGC);
+innerRetina4 = innerRetina;
+
+rdt = RdtClient('isetbio');
 rdt.crp('/resources/data/rgc/pixium/');
-
-data = rdt.readArtifact('WNstim_response_OffMidget_RGC', 'type', 'mat');
-innerRetina3 = data.innerRetina;
-% filenameRGC = ['/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/sep25/WNstim_response_OffMidget_RGC.mat'];
-% load(filenameRGC);
-% innerRetina3 = innerRetina;
-% for loadind = 2:4
-%     clear innerRetina
-%     filenameRGC = ['/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/sep25/WNstim_response_OffMidget_RGC.mat'];
-%     load(filenameRGC);
-%     innerRetinaHealthy3.mosaic{loadind} = innerRetina.mosaic{1};
-%     
-% end
-
-
-data = rdt.readArtifact('WNstim_response_OnMidget_RGC', 'type', 'mat');
-innerRetina4 = data.innerRetina;
-% filenameRGC = ['/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/sep25/WNstim_response_OnMidget_RGC.mat'];
-% load(filenameRGC);
-% innerRetina4 = innerRetina;
-% for loadind = 2:4
-%     clear innerRetina
-%     filenameRGC = ['/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/sep25/WNstim_response_OnMidget_RGC.mat'];
-%     load(filenameRGC);
-%     innerRetinaHealthy4.mosaic{loadind} = innerRetina.mosaic{1};
-%     
-% end
-
 data = rdt.readArtifact('WNstim_response_OffParasol_RGC', 'type', 'mat');
-innerRetina2 = data.innerRetina; 
-% for loadind = 2:4
-%     clear data
-%     data = rdt.readArtifact('WNstim_response_OffParasol_RGC', 'type', 'mat');
-%     innerRetinaHealthy2.mosaic{loadind} = data.innerRetina.mosaic{1};
-%     
-% end
-
-
+innerRetina2 = data.innerRetina; % clear innerRetina;
 data = rdt.readArtifact('WNstim_response_OnParasol_RGC', 'type', 'mat');
 innerRetina = data.innerRetina; 
-% for loadind = 2:4
-%     clear data
-%     data = rdt.readArtifact('WNstim_response_OnParasol_RGC', 'type', 'mat');
-%     innerRetinaHealthy2.mosaic{loadind} = data.innerRetina.mosaic{1};
-%     
-% end
 
 % filenameRGC = ['C:\Users\James\Documents\GitHub\May26_onBig2\WNstim_response_OnParasol_RGC.mat'];
 
@@ -422,40 +429,39 @@ innerRetina = data.innerRetina;
 
 
 % % % % % Plot
-
-metersPerPixel = retinalPatchWidth/retinalPatchSize(2);
-
-irPlot(innerRetina,'mosaic');
-% % figure;
-hold on;
-for spInd = 1:length(innerRetina.mosaic)
-for i = 3:eaSize(1)-2
-    for j = 1:eaSize(2)
-        subplot(floor(sqrt(length(innerRetina.mosaic))),ceil(sqrt(length(innerRetina.mosaic))),spInd); 
-        hold on;
-%         scatter(electrodeArray.center(i,j,1),electrodeArray.center(i,j,2));
-        plot(xh+electrodeArray.center(i,j,1)./metersPerPixel,yh+electrodeArray.center(i,j,2)./metersPerPixel,'r','linewidth',3)
-    end
-end
-end
-
-% innerRetina = irCompute(innerRetina, os);
-
-% Plot the electrode array over spatial receptive fields
-% eaSize = size(electrodeArray.center);
+% irPlot(innerRetina,'mosaic');
+% % % figure;
 % hold on;
-% for i = 1:eaSize(1)
+% for spInd = 1:length(innerRetina.mosaic)
+% for i = 3:eaSize(1)-2
 %     for j = 1:eaSize(2)
-%         scatter(1e7*electrodeArray.center(i,j,1),1e7*electrodeArray.center(i,j,2));
+%         subplot(floor(sqrt(length(innerRetina.mosaic))),ceil(sqrt(length(innerRetina.mosaic))),spInd); 
+%         hold on;
+% %         scatter(electrodeArray.center(i,j,1),electrodeArray.center(i,j,2));
+%         plot(xh+electrodeArray.center(i,j,1),yh+electrodeArray.center(i,j,2),'r','linewidth',3)
 %     end
 % end
-mosaicInd = 1;
+% end
+% 
+metersPerPixel = retinalPatchWidth/retinalPatchSize(2);
+% 
+% % innerRetina = irCompute(innerRetina, os);
+% 
+% % Plot the electrode array over spatial receptive fields
+% % eaSize = size(electrodeArray.center);
+% % hold on;
+% % for i = 1:eaSize(1)
+% %     for j = 1:eaSize(2)
+% %         scatter(1e7*electrodeArray.center(i,j,1),1e7*electrodeArray.center(i,j,2));
+% %     end
+% % end
+% mosaicInd = 1;
 % 
 electrodeCenter = reshape(electrodeArray.center,[numberElectrodes,2]);
 
 rp = metersPerPixel*vertcat(innerRetina.mosaic{1}.cellLocation{:});
-figure; scatter(rp(:,1),rp(:,2))
-hold on; scatter(electrodeCenter(:,1),electrodeCenter(:,2),'xr')
+% figure; scatter(rp(:,1),rp(:,2))
+% hold on; scatter(electrodeCenter(:,1),electrodeCenter(:,2),'xr')
 
 %% Tile mosaics for reconstruction
 
@@ -490,24 +496,24 @@ end
 
 size(mosaicOffset)
 [nTileRows*nTileCols 2]
-mosaicOffsetPlot = reshape(mosaicOffset, [nTileRows*nTileCols 2]);
-hold on; scatter(mosaicOffsetPlot(:,1), mosaicOffsetPlot(:,2),'go','filled');
+% mosaicOffsetPlot = reshape(mosaicOffset, [nTileRows*nTileCols 2]);
+% hold on; scatter(mosaicOffsetPlot(:,1), mosaicOffsetPlot(:,2),'go','filled');
 
 %% Calculate RGC input
 % Weight electrode activation by Gaussian as a function of distance between
 % centers
-params.nSteps = paramsStim.nsteps-8;
+params.nSteps = size(electrodeArray.activation,3);%5*25;
 % On midget
 offFlag = 0;
 innerRetinaInput = irActivationFromElectrode(innerRetina, electrodeArray, retinalPatchWidth, metersPerPixel, nTileRows, nTileCols, mosaicOffset, params, offFlag);
 
 % Off parasol
-offFlag = 1;
+offFlag = 0;
 innerRetinaInput2 = irActivationFromElectrode(innerRetina2, electrodeArray, retinalPatchWidth, metersPerPixel, nTileRows, nTileCols, mosaicOffset, params, offFlag);
 
 
 % Off midget
-offFlag = 1;
+offFlag = 0;
 innerRetinaInput3 = irActivationFromElectrode(innerRetina3, electrodeArray, retinalPatchWidth, metersPerPixel, nTileRows, nTileCols, mosaicOffset, params, offFlag);
 
 
@@ -527,7 +533,7 @@ innerRetinaThreshold4 = irGetThreshold(innerRetina4);
 
 %% Compute RGC activations
 
-innerRetina =  irGetLinearRespElectrode(innerRetina, 10*innerRetinaInput, innerRetinaThreshold, params);
+innerRetina = irGetLinearRespElectrode(innerRetina, 10*innerRetinaInput, innerRetinaThreshold, params);
 innerRetina2 = irGetLinearRespElectrode(innerRetina2, 10*innerRetinaInput2, innerRetinaThreshold2, params);
 innerRetina3 = irGetLinearRespElectrode(innerRetina3, 10*innerRetinaInput3, innerRetinaThreshold3, params);
 innerRetina4 = irGetLinearRespElectrode(innerRetina4, 10*innerRetinaInput4, innerRetinaThreshold4, params);
@@ -623,241 +629,53 @@ for iTileRows = 1:nTileRows
     end
 end
 
-figure; ieMovie(movieStitch);
-% figure; ieMovie(movieStitchHealthy);
+% figure; ieMovie(movieStitch);
+% figure; ieMovie(movieStitchDropout);
 
-%% Build RGC array for healthy retina
-
-clear paramsIR innerRetinaHealthy
-% paramsIR.name    = 'Macaque inner retina 1'; % This instance
-% paramsIR.eyeSide   = 'left';   % Which eye
-% paramsIR.eyeRadius = 3;        % Radius in mm
-% paramsIR.eyeAngle  = 90;       % Polar angle in degrees
-% 
-% model   = 'LNP';    % Computational model
-% innerRetinaHealthy = irCreate(osHealthy,paramsIR);
-% % innerRetinaHealthy = rgcMosaicCreate(innerRetinaHealthy,'type','onMidget','model',model);
-% % innerRetinaHealthy = rgcMosaicCreate(innerRetinaHealthy,'type','offMidget','model',model);
-% % innerRetinaHealthy = rgcMosaicCreate(innerRetinaHealthy,'type','onParasol','model',model);
-% innerRetinaHealthy = rgcMosaicCreate(innerRetinaHealthy,'type','offParasol','model',model);
-
-
-filenameRGC = ['/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/sep25/WNstim_response_OffMidget_RGC.mat'];
-load(filenameRGC);
-innerRetinaHealthy3 = innerRetina;
-% for loadind = 2:4
-%     clear innerRetina
-%     filenameRGC = ['/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/sep25/WNstim_response_OffMidget_RGC.mat'];
-%     load(filenameRGC);
-%     innerRetinaHealthy3.mosaic{loadind} = innerRetina.mosaic{1};
-%     
-% end
-
-filenameRGC = ['/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/sep25/WNstim_response_OnMidget_RGC.mat'];
-load(filenameRGC);
-innerRetinaHealthy4 = innerRetina;
-% for loadind = 2:4
-%      clear innerRetina
-%     filenameRGC = ['/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/sep25/WNstim_response_OnMidget_RGC.mat'];
-%     load(filenameRGC);
-%     innerRetinaHealthy4.mosaic{loadind} = innerRetina.mosaic{1};
-%     
-% end
-
-rdt = RdtClient('isetbio');
-rdt.crp('/resources/data/rgc/pixium/');
-data = rdt.readArtifact('WNstim_response_OffParasol_RGC', 'type', 'mat');
-innerRetinaHealthy2 = data.innerRetina; % clear innerRetina;
-% for loadind = 2:4
-%     clear data
-%     data = rdt.readArtifact('WNstim_response_OffParasol_RGC', 'type', 'mat');
-%     innerRetinaHealthy2.mosaic{loadind} = data.innerRetina.mosaic{1};
-%     
-% end
-
-data = rdt.readArtifact('WNstim_response_OnParasol_RGC', 'type', 'mat');
-innerRetinaHealthy = data.innerRetina;
-% for loadind = 2:4
-%     clear data
-%     data = rdt.readArtifact('WNstim_response_OnParasol_RGC', 'type', 'mat');
-%     innerRetinaHealthy.mosaic{loadind} = data.innerRetina.mosaic{1};
-%     
-% end
-
-% %%
-% for mosaicInd = 1:length(innerRetina2.mosaic)
-% %     innerRetinaHealthy.mosaic{mosaicInd} = innerRetinaHealthy.mosaic{1};
-%     szMos = innerRetinaHealthy.mosaic{mosaicInd}.get('mosaic size');
-%     
-%     [mosaicSubRow, mosaicSubCol] = ind2sub([nTileRows nTileCols],mosaicInd);
-%     newLocs = cell(szMos(1),szMos(2));
-%     clear newLocs
-%     for xc = 1:szMos(1)
-%         for yc = 1:szMos(2)
-%             newLocs{xc,yc} = ...
-%                 innerRetinaHealthy.mosaic{mosaicInd}.cellLocation{xc,yc} + squeeze(offsetStitch(mosaicSubRow,mosaicSubCol,:))';
-%         end
-%     end
-%     innerRetinaHealthy.mosaic{mosaicInd}.set('cellLocation',newLocs);
-% 
-% end
-% 
-% innerRetinaHealthy.mosaic{1}.cellLocation{1,1}
-% innerRetinaHealthy.mosaic{2}.cellLocation{1,1}
-% innerRetinaHealthy.mosaic{3}.cellLocation{1,1}
-% innerRetinaHealthy.mosaic{4}.cellLocation{1,1}
-
+% figure; 
+% set(gcf,'position',[483         703        1077         635]);
+% % ieMovie(movieStitchDropout,'save',true,'vname',['movieStitchDropout_' num2str(cputime*100)]);
 %%
+% name_str = ['gratingH_20Hz_width_' num2str(params.barWidth) '_freq_' num2str(freqL) '_onM_8_hz_ON_IMS1_' num2str(cputime*100) '.mp4'];
+name_str = ['prosthesis_fullfield_border_' num2str(cputime*100) '.mp4'];
+path_str = [isetbioRootPath '/'];
+% path_str = '/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/sep25/';
+vObj = VideoWriter([path_str name_str],'MPEG-4');
+vObj.FrameRate = 10;
+vObj.Quality = 100;
+open(vObj);
 
-% for mosaicInd = 2:length(innerRetina2.mosaic)
-% %     innerRetinaHealthy2.mosaic{mosaicInd} = innerRetinaHealthy2.mosaic{1};
-%     szMos = innerRetinaHealthy2.mosaic{mosaicInd}.get('mosaic size');
-%     
-%     [mosaicSubRow, mosaicSubCol] = ind2sub([nTileRows nTileCols],mosaicInd);
-%     newLocs = cell(szMos(1),szMos(2));
-%     for xc = 1:szMos(1)
-%         for yc = 1:szMos(2)
-%             newLocs{xc,yc} = ...
-%                 innerRetinaHealthy2.mosaic{mosaicInd}.cellLocation{xc,yc} + squeeze(offsetStitch(mosaicSubRow,mosaicSubCol,:))';
-%         end
-%     end
-%     innerRetinaHealthy2.mosaic{mosaicInd}.set('cellLocation',newLocs);
-% 
-% end
-% 
-% innerRetinaHealthy2.mosaic{1}.cellLocation{1,1}
-% innerRetinaHealthy2.mosaic{2}.cellLocation{1,1}
-% innerRetinaHealthy2.mosaic{3}.cellLocation{1,1}
-% innerRetinaHealthy2.mosaic{4}.cellLocation{1,1}
-
-%%
-
-% for mosaicInd = 2:length(innerRetina2.mosaic)
-% %     innerRetinaHealthy3.mosaic{mosaicInd} = innerRetinaHealthy3.mosaic{1};
-%     szMos = innerRetinaHealthy3.mosaic{mosaicInd}.get('mosaic size');
-%     
-%     [mosaicSubRow, mosaicSubCol] = ind2sub([nTileRows nTileCols],mosaicInd);
-%     newLocs = cell(szMos(1),szMos(2));
-%     for xc = 1:szMos(1)
-%         for yc = 1:szMos(2)
-%             newLocs{xc,yc} = ...
-%                 innerRetinaHealthy3.mosaic{mosaicInd}.cellLocation{xc,yc} + squeeze(offsetStitch(mosaicSubRow,mosaicSubCol,:))';
-%         end
-%     end
-%     innerRetinaHealthy3.mosaic{mosaicInd}.set('cellLocation',newLocs);
-% 
-% end
-% 
-% 
-% innerRetinaHealthy3.mosaic{1}.cellLocation{1,1}
-% innerRetinaHealthy3.mosaic{2}.cellLocation{1,1}
-% innerRetinaHealthy3.mosaic{3}.cellLocation{1,1}
-% innerRetinaHealthy3.mosaic{4}.cellLocation{1,1}
-%%
-% for mosaicInd = 2:length(innerRetina2.mosaic)
-% %     innerRetinaHealthy4.mosaic{mosaicInd} = innerRetinaHealthy4.mosaic{1};
-% %     innerRetinaHealthy4.mosaic{mosaicInd} = data.innerRetina.mosaic{1};
-%     szMos = innerRetinaHealthy4.mosaic{mosaicInd}.get('mosaic size');
-%     
-%     [mosaicSubRow, mosaicSubCol] = ind2sub([nTileRows nTileCols],mosaicInd);
-%     newLocs = cell(szMos(1),szMos(2));
-%     for xc = 1:szMos(1)
-%         for yc = 1:szMos(2)
-%             newLocs{xc,yc} = ...
-%                 innerRetinaHealthy4.mosaic{mosaicInd}.cellLocation{xc,yc} + squeeze(offsetStitch(mosaicSubRow,mosaicSubCol,:))';
-% %             squeeze(offsetStitch(mosaicSubRow,mosaicSubCol,:))';
-%         end
-%     end
-%     innerRetinaHealthy4.mosaic{mosaicInd}.set('cellLocation',newLocs);
-% 
-% end
-% 
-% innerRetinaHealthy4.mosaic{1}.cellLocation{1,1}
-% innerRetinaHealthy4.mosaic{2}.cellLocation{1,1}
-% innerRetinaHealthy4.mosaic{3}.cellLocation{1,1}
-% innerRetinaHealthy4.mosaic{4}.cellLocation{1,1}
-%%
-innerRetinaHealthy = irCompute(innerRetinaHealthy,osHealthy,'coupling',false);
-innerRetinaHealthy2 = irCompute(innerRetinaHealthy2,osHealthy,'coupling',false);
-innerRetinaHealthy3 = irCompute(innerRetinaHealthy3,osHealthy,'coupling',false);
-innerRetinaHealthy4 = irCompute(innerRetinaHealthy4,osHealthy,'coupling',false);
-
-%%
-
-% clear movrecons_on_off movieStitch
-[movrecons_on_offHealthy, movrecons_on_offHealthy_dropout] = irOptimalRecon(innerRetinaHealthy, innerRetinaHealthy2, innerRetinaHealthy3, innerRetinaHealthy4, percentDead);
-
-%% Movie stitch healthy
-movieSize = size(movrecons_on_offHealthy{1});
-% movieStitchHealthy = zeros(nTileRows*96,nTileCols*96,movieSize(3));
-% movieStitchHealthyDropout = zeros(nTileRows*96,nTileCols*96,movieSize(3));
+sizeScene = size(movingBar.sceneRGB(:,:,1,:));
 
 
-% nCut = 1;
-movieStitchHealthy = zeros(nTileRows*96,nTileCols*96-nTileCols*nCut,movieSize(3));
-movieStitchHealthyDropout = zeros(nTileRows*96,nTileCols*96-nTileCols*nCut,movieSize(3));
-
-mosaicCtr = 0;
-for iTileRows = 1:nTileRows
-    for iTileCols = 1:nTileCols
-        mosaicCtr = mosaicCtr+1;
-%         innerRetina.mosaic{mosaicCtr} = innerRetina.mosaic{1};
-%         innerRetina2.mosaic{mosaicCtr} = innerRetina2.mosaic{1};
-%         mosaicOffset(iTileRows, iTileCols, 1) = electrodePos0(1) + (rgcDistRows)*(iTileRows-1) + (rgcDistRows/2);
-%         mosaicOffset(iTileRows, iTileCols, 2) = electrodePos0(2) + (rgcDistCols)*(iTileCols-1) +(rgcDistCols/2);
-        
-%         movieStitchHealthy(1+(iTileRows-1)*96:96+(iTileRows-1)*96,1+(iTileCols-1)*96:96+(iTileCols-1)*96,:) = movrecons_on_offHealthy{mosaicCtr};
-%         movieStitchHealthyDropout(1+(iTileRows-1)*96:96+(iTileRows-1)*96,1+(iTileCols-1)*96:96+(iTileCols-1)*96,:) = movrecons_on_offHealthy_dropout{mosaicCtr};
-        
-        movieStitchHealthy(1+(iTileRows-1)*96:96+(iTileRows-1)*96,1+(iTileCols-1)*96  - (iTileCols-1)*(nCut-1):96+(iTileCols-1)*96 - iTileCols*(nCut-1),:) = movrecons_on_offHealthy{mosaicCtr}(:,1:end-(nCut-1),:);
-        movieStitchHealthyDropout(1+(iTileRows-1)*96:96+(iTileRows-1)*96 ,1+(iTileCols-1)*96- (iTileCols-1)*(nCut-1):96+(iTileCols-1)*96 - iTileCols*(nCut-1),:) = movrecons_on_offHealthy_dropout{mosaicCtr}(:,1:end-(nCut-1),:);
- 
-    end
-end
-
-figure; ieMovie(movieStitchHealthy);
-
-toc
-%%
-% % name_str = ['gratingH_20Hz_width_' num2str(params.barWidth) '_freq_' num2str(freqL) '_onM_8_hz_ON_IMS1_' num2str(cputime*100) '.mp4'];
-% name_str = ['prosthesis_combined_bar_' num2str(cputime*100) '.mp4'];
-% path_str = '/Users/james/Documents/MATLAB/isetbio misc/pixium_videos/meeting_may27/';
-% vObj = VideoWriter([path_str name_str],'MPEG-4');
-% vObj.FrameRate = 10;
-% vObj.Quality = 100;
-% open(vObj);
-% 
-% sizeScene = size(movingBar.sceneRGB(:,:,1,:));
-% 
-% 
-% caxispros = [1*min(movieStitch(:)) 1*max(movieStitch(:))];
+caxisstitch = [1*min(movieStitch(:)) 1*max(movieStitch(:))];
 % caxishealthy = [1*min(movieStitchHealthy(:)) 1*max(movieStitchHealthy(:))];
-% % caxispros = [1*min(movieStitchDropout(:)) 1*max(movieStitchDropout(:))];
-% % caxishealthy = [1*min(movieStitchHealthyDropout(:)) 1*max(movieStitchHealthyDropout(:))];
-% 
-% % Play the movie with the stimulus
-% for loopv = 1%:10
-% h1=figure; 
-% % set(gcf,'position',[160 60 1070 740]);
-% set(gcf,'position',[440   159   802   639]);
-% hold on;
-% % for frame1 = 1:params.nSteps%size(movingBar.sceneRGB,3)
-% for frame1 = [1:size(movieStitch,3)-1]
+caxispros = [1*min(movieStitchDropout(:)) 1*max(movieStitchDropout(:))];
+% caxishealthy = [1*min(movieStitchHealthyDropout(:)) 1*max(movieStitchHealthyDropout(:))];
+
+% Play the movie with the stimulus
+for loopv = 1%:10
+h1=figure; 
+% set(gcf,'position',[160 60 1070 740]);
+set(gcf,'position',[319   403   923   395]);
+hold on;
+% for frame1 = 1:params.nSteps%size(movingBar.sceneRGB,3)
+for frame1 = [1:size(electrodeArray.activation,3)-1]
 %     subplot(221);
 %     imagesc(squeeze(movingBar.sceneRGB(:,:,frame1,:)));
 %     caxis([0 1]);
 %     colormap gray; 
-%     
-%     subplot(222);
-%     for xPos = 3:numberElectrodesX-2
-%         for yPos = 1:numberElectrodesY
-%             hold on;
-%             fill(xh+electrodeArray.center(xPos,numberElectrodesY+1-yPos,1),yh+electrodeArray.center(xPos,numberElectrodesY+1-yPos,2),electrodeArray.activation(xPos,yPos,frame1))
-%         end
-%     end
-%     caxis([0 1]);
-%     
-%     
+    
+    subplot(131);
+    for xPos = 3:numberElectrodesX-2
+        for yPos = 1:numberElectrodesY
+            hold on;
+            fill(xh+electrodeArray.center(xPos,numberElectrodesY+1-yPos,1),yh+electrodeArray.center(xPos,numberElectrodesY+1-yPos,2),electrodeArray.activation(xPos,yPos,frame1))
+        end
+    end
+    caxis([0 1]);
+    
+    
 %     subplot(223);    
 % %     imagesc((stimulusReconstructionHealthy(1:paramsRecHealthy.maxx,1:paramsRecHealthy.maxy,frame1)));
 % %     imagesc((stimulusReconstructionHealthy(1:sizeScene(2),1:sizeScene(2),frame1)));
@@ -872,41 +690,65 @@ toc
 % %     caxis([0 .75*max(movrecons_on(:))]);
 %     caxis(caxishealthy);
 %     title('Healthy');
-%     
-%     subplot(224);    
-% %     imagesc((stimulusReconstruction(1:paramsRec.maxx,1:paramsRec.maxy,frame1)));
-% %     imagesc((stimulusReconstruction(1:sizeScene(2),1:sizeScene(2),frame1))');
-% % imagesc((stimulusReconstruction(1:200,1:200,frame1))');
-% % 
-% % % moviemat = movrecons_on;
-% %      colormap gray
-% % % %     caxis([.5*paramsRec.minR .5*paramsRec.maxR]);
-% %     caxis([1*paramsRec.minR 1*paramsRec.maxR]);
+    
+    subplot(132);    
+%     imagesc((stimulusReconstruction(1:paramsRec.maxx,1:paramsRec.maxy,frame1)));
+%     imagesc((stimulusReconstruction(1:sizeScene(2),1:sizeScene(2),frame1))');
+% imagesc((stimulusReconstruction(1:200,1:200,frame1))');
 % 
-%     imagesc(movieStitch(:,:,frame1-0));  
-% %         imagesc(movieStitchDropout(:,:,frame1-20-4)');
-% 
+% % moviemat = movrecons_on;
 %      colormap gray
-% %      caxis([1*paramsRecHealthy.minR 1*paramsRecHealthy.maxR]);
-% %     caxis([1*paramsRecHealthy.minR 1*paramsRecHealthy.maxR]);
-% %     caxis([0 .5*paramsRecHealthy.maxR]);
-% %     caxis([0 .75*max(movrecons_on(:))]);
-%     caxis(caxispros);
-% %     title('Healthy');
-%     title('Prosthetic - 0% dead');
-% %     pause(0.1);
-% drawnow
+% % %     caxis([.5*paramsRec.minR .5*paramsRec.maxR]);
+%     caxis([1*paramsRec.minR 1*paramsRec.maxR]);
+
+    imagesc(movieStitch(:,:,frame1-0));  
+%         imagesc(movieStitchDropout(:,:,frame1-20-4)');
+
+     colormap gray
+%      caxis([1*paramsRecHealthy.minR 1*paramsRecHealthy.maxR]);
+%     caxis([1*paramsRecHealthy.minR 1*paramsRecHealthy.maxR]);
+%     caxis([0 .5*paramsRecHealthy.maxR]);
+%     caxis([0 .75*max(movrecons_on(:))]);
+    caxis(caxisstitch);
+%     title('Healthy');
+    title('Prosthetic - 0% dead');
+%     pause(0.1);
+
+
+    subplot(133);    
+%     imagesc((stimulusReconstruction(1:paramsRec.maxx,1:paramsRec.maxy,frame1)));
+%     imagesc((stimulusReconstruction(1:sizeScene(2),1:sizeScene(2),frame1))');
+% imagesc((stimulusReconstruction(1:200,1:200,frame1))');
 % 
-%     F = getframe(h1);
-%     writeVideo(vObj,F);
-% end
-% end
+% % moviemat = movrecons_on;
+%      colormap gray
+% % %     caxis([.5*paramsRec.minR .5*paramsRec.maxR]);
+%     caxis([1*paramsRec.minR 1*paramsRec.maxR]);
+
+    imagesc(movieStitchDropout(:,:,frame1-0));  
+%         imagesc(movieStitchDropout(:,:,frame1-20-4)');
+
+     colormap gray
+%      caxis([1*paramsRecHealthy.minR 1*paramsRecHealthy.maxR]);
+%     caxis([1*paramsRecHealthy.minR 1*paramsRecHealthy.maxR]);
+%     caxis([0 .5*paramsRecHealthy.maxR]);
+%     caxis([0 .75*max(movrecons_on(:))]);
+    caxis(caxispros);
+%     title('Healthy');
+    title(sprintf('Prosthetic - %d%% dead',percentDead*100));
+    
+drawnow
+
+    F = getframe(h1);
+    writeVideo(vObj,F);
+end
+end
+
+
+close(vObj)
 % 
 % 
-% close(vObj)
-% % 
-% % 
-% % % close all;
-% % % clear stimulusReconstruction stimulusReconstructionHealthy
-% % % name_str = ['gratingH_20Hz_width_' num2str(params.barWidth) '_freq_' num2str(freqL) '_onM_8_hz_ON_IMS1_' num2str(cputime*100) '.mat'];
-% % % save([path_str name_str])
+% % close all;
+% % clear stimulusReconstruction stimulusReconstructionHealthy
+% % name_str = ['gratingH_20Hz_width_' num2str(params.barWidth) '_freq_' num2str(freqL) '_onM_8_hz_ON_IMS1_' num2str(cputime*100) '.mat'];
+% % save([path_str name_str])
