@@ -55,8 +55,11 @@ end
 % % load('/Users/james/Downloads/filters_mosaic_wn_all_42reps_overlap0_svd_1000_len_100.mat')
 % 
 % load('C:\Users\James\Documents\MATLAB\github\RGC-Reconstruction\dat\wn_Dec3_sp_filter_win1.mat');
-
-load(filterFile);
+if ismac || isunix
+    load([phospheneRootPath '/dat/' filterFile]);
+else
+    load([phospheneRootPath '\dat\' filterFile]);
+end
 % 
 % load('C:\Users\James\Documents\MATLAB\github\RGC-Reconstruction\dat\wn_Dec3_sp_filter_new1.mat');
 

@@ -236,12 +236,12 @@ for iblock = 1:rsFactor
         blockctr = blockctr+1;
         
         %        load(['ws_nov24_block' num2str(blockctr) '.mat']);%, 'innerRetinaHealthy', 'innerRetinaHealthy2', 'innerRetinaHealthy3', 'innerRetinaHealthy4');
-        load(['C:\Users\James\Documents\MATLAB\github\EJLPhosphene\dat\tile\ws_dec3wnmaga_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat']);
-        clear movrecons_on_offHealthy
-        [movrecons_on_offHealthy, movrecons_on_offHealthy_dropout] = irOptimalReconSingle(innerRetina, percentDead, numbins);
+        load(['C:\Users\James\Documents\MATLAB\github\EJLPhosphene\dat\tile\ws_nov24_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat']);
+%         clear movrecons_on_offHealthy
+%         [movrecons_on_offHealthy, movrecons_on_offHealthy_dropout] = irOptimalReconSingle(innerRetina, percentDead, numbins);
         
         
-        movieTmp =  movrecons_on_offHealthy(:,:,1:591);
+        movieTmp =  movrecons_on_offHealthy{1}(:,:,1:591);
         movieRecon((iblock-1)*96+[1:96],(jblock-1)*96+[1:96],:) = 255*ieScale(movieTmp - mean(movieTmp(:)));
         clear movrecons_on_offHealthy
     end
@@ -253,17 +253,21 @@ end
 
 %%
 fig=figure;
-set(fig,'position',[    624         437        1018         541]);
-aviobj = avifile(['C:\Users\James\Documents\MATLAB\github\EJLPhosphene\dat\prosthesis_recon_' num2str(rsFactor) '_30fps_singleMos_wn_maga.avi'])
+% set(fig,'position',[    624         437        1018         541]);
+set(fig,'position',[624   486   508   492]);
+% aviobj = avifile(['C:\Users\James\Documents\MATLAB\github\EJLPhosphene\dat\prosthesis_recon_' num2str(rsFactor) '_30fps_singleMos_wn_maga.avi'])
+aviobj = avifile(['C:\Users\James\Documents\MATLAB\github\EJLPhosphene\dat\hallway_orig_' num2str(rsFactor) '.avi'])
 aviobj.Fps = 30;
 shiftval = 13-4;
-movieComb = 355*ieScale(movieRecon(:,:,1:591-shiftval+1));
-movieComb(:,rsFactor*96+[1:rsFactor*96],:) = testmovieshort(:,:,shiftval+1:591+1);
+% movieComb = 355*ieScale(movieRecon(:,:,1:591-shiftval+1));
+% movieComb(:,rsFactor*96+[1:rsFactor*96],:) = testmovieshort(:,:,shiftval+1:591+1);
     
 for k=1:size(movieRecon,3)-60
     % imagesc(movieRecon(:,:,k)); colormap gray;
 
-    imagesc(movieComb(:,:,k)); colormap gray; axis image
+%     imagesc(movieComb(:,:,k)); colormap gray; axis image
+%     imagesc(movieRecon(:,:,k)); colormap gray; axis image
+    imagesc(testmovieshort(:,:,k)); colormap gray; axis image
     F = getframe(fig);
     aviobj = addframe(aviobj,F);
 end

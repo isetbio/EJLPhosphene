@@ -328,7 +328,11 @@ plot(eaDSRS');
 
 %% Build RGC array for healthy retina
 clear paramsIR innerRetinaHealthy
-load('C:\Users\James\Documents\MATLAB\github\RGC-Reconstruction\dat\pixium\mosaicAll_pix_ns.mat')
+if isunix || ismac
+    load([phospheneRootPath '/dat/mosaicAll_pix_ns.mat'])
+else    
+    load([phospheneRootPath '\dat\mosaicAll_pix_ns.mat'])
+end
 
 %% Calculate RGC input
 % Weight electrode activation by Gaussian as a function of distance between
@@ -353,7 +357,7 @@ toc
 pOpt.innerRetina = innerRetina;
 pOpt.percentDead = 0;
 pOpt.numbins = 4;
-pOpt.filterFile = 'pixium\pix1_long_filter_nsBig_100hz_4st';
+pOpt.filterFile = 'pix1_long_filter_nsBig_100hz_4st';
 
 [movrecons_on_offHealthy, movrecons_on_offHealthy_dropout] = irOptimalReconSingle(pOpt);
 
@@ -378,7 +382,11 @@ toc
 fig=figure;
 % set(fig,'position',[    624         437        1018         541]);
 set(fig,'position',[624   704   537   274]);
-aviobj = avifile([reconstructionRootPath '\dat\pixium\prosthesis_recon_' num2str(rsFactor) '_directFullField.avi'])
+if ismac || isunix    
+    aviobj = avifile([phospheneRootPath '/dat/prosthesis_recon_' num2str(rsFactor) '_directFullField.avi'])
+else
+    aviobj = avifile([phospheneRootPath '\dat\prosthesis_recon_' num2str(rsFactor) '_directFullField.avi'])
+end
 aviobj.Fps = 30;
 
 for k=1:size(movieComb,3)-0
