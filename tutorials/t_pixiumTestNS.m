@@ -80,7 +80,7 @@ params.fov = 1.6;
 % over the stimulus a number of times. The mosaic is necessarily small
 % because the training algorithm takes a long time.
 
-for rsFactor = 1%[1 2 3 5 6]
+for rsFactor = 3%[1 2 3 5 6]
     
     %% Resize the hallway movie stimulus for tiling
     rsFactor
@@ -341,6 +341,6 @@ for rsFactor = 1%[1 2 3 5 6]
     aviobj = close(aviobj);
     
     %%
-    clear movieComb movieRecon testmovieshort vidFrame
+    % clear movieComb movieRecon testmovieshort vidFrame
     toc
 end
