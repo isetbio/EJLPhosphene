@@ -116,8 +116,10 @@ end
 %%
 
 % sep 25
-load('/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/sep25/filters_may26_parasol_midget_combined_svd_3000_len_100.mat');
+% load('/Users/james/Documents/MATLAB/isetbio misc/eye_and_chip/sep25/filters_may26_parasol_midget_combined_svd_3000_len_100.mat');
+load('C:\Users\James\Documents\GitHub\RGC-ReconAdd\output\svd_reconstruct_shorttrain_midgets\filters_may26_parasol_midget_combined_svd_3000_len_100.mat')
 
+% load('C:\Users\James\Documents\MATLAB\github\RGC-Reconstruction\dat\ns_Dec2_sp_filter.mat');
 % rdt = RdtClient('isetbio');
 % rdt.crp('/resources/data/reconstruction');
 % data = rdt.readArtifact('filters_may26_parasol_midget_combined_svd_3000_len_100', 'type', 'mat');

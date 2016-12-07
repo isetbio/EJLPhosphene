@@ -124,7 +124,7 @@ for blockNum =1:nBlocks
     
     
     load([ reconstructionRootPath  '\dat\movsm_' num2str(blockNum) '.mat'],'movsm');
-    natScenes = movsm(1:96,1:96,randperm(nSteps));
+    c = movsm(1:96,1:96,randperm(nSteps));
     os = osSet(os, 'rgbData', double(natScenes));
     
     innerRetina = irCompute(innerRetina,os);

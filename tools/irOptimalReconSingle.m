@@ -1,4 +1,4 @@
-function [movrecons_on_off_full, movrecons_on_off_dropout] = irOptimalReconSingle(innerRetina, percentDead)
+function [movrecons_on_off_full, movrecons_on_off_dropout] = irOptimalReconSingle(varargin)
 % Converts an RGC mosaic spike train to a reconstructed movie.
 % 
 % testReconAll loads an RGC mosaic as well as a movie input and computes 
@@ -9,6 +9,20 @@ function [movrecons_on_off_full, movrecons_on_off_dropout] = irOptimalReconSingl
 % 10/2016 JRG (c) isetbio team
 % 
 % See also testReconAll, runReconstruct, irOptimalRecon
+
+%%
+
+
+p = inputParser;
+p.addParameter('innerRetina',[]);
+p.addParameter('percentDead',0,@isnumeric);
+p.addParameter('filterFile',[],@ischar);
+p.addParameter('numbins',[],@isnumeric);
+p.parse(varargin{:});
+innerRetina = p.Results.innerRetina;
+percentDead = p.Results.percentDead;
+filterFile = p.Results.filterFile;
+numbins = p.Results.numbins;
 %% Get spikes from mosaic objects
 
 y = cell(length(innerRetina.mosaic));
@@ -38,7 +52,14 @@ end
 
 % all four mosaics, nov 4
 % load('/Users/james/Downloads/filters_mosaic_ns_all_overlap0_svd_1000_len_100.mat')
-load('/Users/james/Downloads/filters_mosaic_wn_all_42reps_overlap0_svd_1000_len_100.mat')
+% % load('/Users/james/Downloads/filters_mosaic_wn_all_42reps_overlap0_svd_1000_len_100.mat')
+% 
+% load('C:\Users\James\Documents\MATLAB\github\RGC-Reconstruction\dat\wn_Dec3_sp_filter_win1.mat');
+
+load(filterFile);
+% 
+% load('C:\Users\James\Documents\MATLAB\github\RGC-Reconstruction\dat\wn_Dec3_sp_filter_new1.mat');
+
 % rdt = RdtClient('isetbio');
 % rdt.crp('/resources/data/reconstruction');
 % data = rdt.readArtifact('filters_may26_parasol_midget_combined_svd_3000_len_100', 'type', 'mat');
@@ -97,9 +118,9 @@ spikeRespOnOff =vertcat(spikeRespOn,spikeRespOff, spikeRespOffM,spikeRespOnM);
 % only midgets
 %     spikeRespOnOff =vertcat(zeros(size(spikeRespOn)),zeros(size(spikeRespOff)), ((spikeRespOffM)),((spikeRespOnM)));
 
-numbins = 8;
+% numbins = 4;
 recons_stim_on_off{mosaicInd,1} = reconsFromFiltLen(filterMat, spikeRespOnOff, numbins);
-% filterMatInd = find(abs(filterMat)<0.001); filterMat2 = filterMat; filterMat2(filterMatInd)=0;
+% filterMatInd = find(abs(filterMat)<0.002); filterMat2 = filterMat; filterMat2(filterMatInd)=0;
 % recons_stim_on_off{mosaicInd,1} = reconsFromFiltLen(filterMat2, spikeRespOnOff, numbins);
 movrecons_on_off_full = reshape(recons_stim_on_off{mosaicInd,1},96,96,size(recons_stim_on_off{mosaicInd,1},2));
 

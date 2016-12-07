@@ -113,14 +113,17 @@ contrastElectrode = 1;
 % Length of WN movie is 1200, take nFrames to limit natural movie to same length
 % nFrames = 3600; 
 % testmovieshort = double(testmovie.matrix(:,:,1:nFrames)); 
-load('EJLPhosphene/dat/stimuli/hallMovie.mat')
-testmovieshort = vidFrame; clear vidFrame;
+% load('EJLPhosphene/dat/stimuli/hallMovie.mat')
+% testmovieshort = vidFrame; clear vidFrame;
+
+load('C:\Users\James\Documents\MATLAB\github\EJLPhosphene\dat\stimuli\hallMovie288.mat','hallMovieResize');
+testmovieshort = uint8(255*ieScale(hallMovieResize)); clear hallMovieResize;
 % Generate display, scene, oi, sensor
 paramsStim.nsteps = 1;%nFrames;%size(testmovieshort,3);
 %  Bipolar filter is setfor 0.001 sec, so it needs to be 0.001
 paramsStim.timeInterval = 1/125;%0.001; % sec
 paramsStim.expTime = 1/125;%0.001; % sec
-nFrames = nSteps;
+nFrames = 20;%nSteps;
 % % For 2013-08-19-6
 % r = 12 mm = 36 degs;
 % theta = 330 degs;

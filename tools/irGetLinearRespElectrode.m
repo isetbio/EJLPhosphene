@@ -6,10 +6,11 @@ for mosaicInd = 1:length(innerRetina.mosaic)
     clear innerRetinaActivation  i0all xc yc
     [yc xc] = size(innerRetina.mosaic{mosaicInd}.cellLocation);
     i0all{mosaicInd} = .5*median(innerRetinaInput(:))*ones(xc,yc);% -.05 - .45*rand(xc,yc);
+%     tc = innerRetina.mosaic{1}.tCenter{1};
     for xind = 1:xc
         for yind = 1:yc
             
-            for frame = 1:params.nSteps
+%             for frame = 1:params.nSteps
                 % innerRetinaActivation{xind,yind,mosaicInd} = innerRetinaFunction{xind,yind,mosaicInd}(innerRetinaInput(xind,yind,mosaicInd));
                 funcParams = innerRetinaThreshold{xind,yind,mosaicInd};
                 thr = 80;%funcParams(1); 
@@ -24,8 +25,9 @@ for mosaicInd = 1:length(innerRetina.mosaic)
                 
                 innerRetinaFunction = @(iElectrode) (5*iElectrode);
                 % innerRetinaActivation{xind,yind}(frame) = 50*innerRetinaFunction(innerRetinaInput(xind,yind,frame,mosaicInd));
-                innerRetinaActivation(xind,yind,frame) = 50*innerRetinaFunction(innerRetinaInput(xind,yind,frame,mosaicInd));
-            end
+                innerRetinaActivation(xind,yind,:) = 50*innerRetinaFunction(innerRetinaInput(xind,yind,:,mosaicInd));
+%                 innerRetinaActivation(xind,yind,:) = conv(squeeze(50*innerRetinaFunction(innerRetinaInput(xind,yind,:,mosaicInd))),tc,'full');
+%             end
         end
     end
     innerRetinaActivation0{mosaicInd} = innerRetinaActivation;
@@ -34,4 +36,4 @@ for mosaicInd = 1:length(innerRetina.mosaic)
 
 end
 
-irPlot(innerRetina, 'linear');
+% irPlot(innerRetina, 'linear');

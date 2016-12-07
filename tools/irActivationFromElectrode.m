@@ -7,10 +7,10 @@ else
 end
 
 numberElectrodesX = floor(retinalPatchWidth/electrodeArray.width)+4;
-numberElectrodesY = floor(retinalPatchWidth/electrodeArray.width)+0;
+numberElectrodesY = floor(retinalPatchWidth/electrodeArray.width)+4;
 numberElectrodes = numberElectrodesX*numberElectrodesY;
 
-for frame = 1:params.nSteps
+% for frame = 1:params.nSteps
     for mosaicInd = 1:length(innerRetina.mosaic)
         [xc, yc] = size(innerRetina.mosaic{mosaicInd}.cellLocation);
         for xind = 1:xc
@@ -21,7 +21,7 @@ for frame = 1:params.nSteps
                 % RGC center
                 rgcCenterMosaic = innerRetina.mosaic{mosaicInd}.cellLocation{xind,yind}*metersPerPixel;
                 [mosaicSubRow, mosaicSubCol] = ind2sub([nTileRows nTileCols],mosaicInd);
-                rgcCenter = rgcCenterMosaic + squeeze(mosaicOffset(mosaicSubRow,mosaicSubCol,:))';
+                rgcCenter = rgcCenterMosaic;% + squeeze(mosaicOffset(mosaicSubRow,mosaicSubCol,:))';
                 % Find distance
                 centerDistanceCoords = repmat(rgcCenter,[numberElectrodes,1]) - electrodeCenter;
                 % Weight electrode activation by Gaussian according to distancej
@@ -30,9 +30,9 @@ for frame = 1:params.nSteps
                 
                 [minDistance, minDistanceInd] = min(centerDistance);
                 [xmin,ymin] = ind2sub([numberElectrodesX,numberElectrodesY],minDistanceInd);
-                minXY(yind,xind,frame,mosaicInd,:) = [xmin ymin];
+%                 minXY(yind,xind,frame,mosaicInd,:) = [xmin ymin];
 %                 innerRetinaInput(yind,xind,frame,mosaicInd) = electrodeArray.activation(xmin,ymin,frame)*exp(-minDistance/2e-4);
-                innerRetinaInput(yind,xind,frame,mosaicInd) = electrodeArrayCopy.activationDS(xmin,ymin,frame)*exp(-minDistance/2e-4);
+                innerRetinaInput(yind,xind,:,mosaicInd) = electrodeArrayCopy.activationDS(xmin,ymin,:)*exp(-minDistance/2e-4);
                 
 %                 for xind2 = 1:numberElectrodesX
 %                     for yind2 = 1:numberElectrodesY
@@ -45,8 +45,8 @@ for frame = 1:params.nSteps
             end
         end
     end
-end
-
+% end
+ph=1;
 innerRetinaInput = innerRetinaInput./10;%(numberElectrodesX*numberElectrodesY);
 
 % figure; imagesc(squeeze(minXY(:,:,10,1,1)))

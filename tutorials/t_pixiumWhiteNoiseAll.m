@@ -22,7 +22,7 @@ fov = 1.6;
 
 % Stimulus length = nSteps*nBlocks;
 nSteps = 12000;
-nBlocks = 12;
+nBlocks = 16;
 
 %% Load image
 clear params
@@ -106,7 +106,7 @@ retinalPatchSize = osGet(os,'size');
 
 filenameRGC = [reconstructionRootPath '\dat\mosaic_all_overlap0.mat'];
 
-for blockNum = 0+[1:nBlocks]
+for blockNum = 83+[1:nBlocks]
     
     % clear psthNorm spikesout spikesoutM spikesoutsm whiteNoiseSmall whiteNoise iStim absorptions innerRetina
     
