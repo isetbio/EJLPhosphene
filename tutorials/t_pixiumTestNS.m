@@ -26,7 +26,7 @@
 %  3bd0152 % nov 19\
 
 %% Initialize
-clear;
+% clear;
 % ieInit;
 tic
 
@@ -80,7 +80,7 @@ params.fov = 1.6;
 % over the stimulus a number of times. The mosaic is necessarily small
 % because the training algorithm takes a long time.
 
-for rsFactor = 3%[1 2 3 5 6]
+for rsFactor = 2%[1 2 3 5 6]
     
     %% Resize the hallway movie stimulus for tiling
     rsFactor
@@ -305,23 +305,24 @@ for rsFactor = 3%[1 2 3 5 6]
     end
     
     %% Tile reconstructed movies 
-    movieRecon = zeros(rsFactor*96,rsFactor*96,564);
+    szLen = size(movrecons_on_offHealthy,3);
+    movieRecon = zeros(rsFactor*96,rsFactor*96,szLen);
     blockctr = 0; percentDead = 0; numbins = pOpt.numbins;
     tic
     for iblock = 1:rsFactor
         for jblock = 1:rsFactor
             blockctr = blockctr+1;
             if ismac || isunix
-                load([phospheneRootPath '/dat/ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
+                load([reconstructionRootPath '/dat/pixium/ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
             else
-                load([phospheneRootPath '\dat\ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
+                load([reconstructionRootPath '\dat\pixium\ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
             end
-            % clear movrecons_on_offHealthy            
-            % pOpt.innerRetina = innerRetina;
-            % [movrecons_on_offHealthy, movrecons_on_offHealthy_dropout] = irOptimalReconSingle(pOpt);
-                        
-            movieTmp =  movrecons_on_offHealthy(:,:,1:564);
-            movieRecon((iblock-1)*96+[1:96],(jblock-1)*96+[1:96],:) = movieTmp;% 255*ieScale(movieTmp - mean(movieTmp(:)));
+%             clear movrecons_on_offHealthy            
+%             pOpt.innerRetina = innerRetina;
+%             [movrecons_on_offHealthy, movrecons_on_offHealthy_dropout] = irOptimalReconSingle(pOpt);
+            szLen = size(movrecons_on_offHealthy,3);
+            movieTmp =  movrecons_on_offHealthy;
+            movieRecon((iblock-1)*96+[1:96],(jblock-1)*96+[1:96],1:szLen) = movieTmp;% 255*ieScale(movieTmp - mean(movieTmp(:)));
             clear movrecons_on_offHealthy
         end
     end
@@ -357,4 +358,14 @@ for rsFactor = 3%[1 2 3 5 6]
     %%
     % clear movieComb movieRecon testmovieshort vidFrame
     toc
+    
+    %%
+    
+%     m1 = ieScale(movieRecon(:,:,1:567-shiftval+1));
+%     m2 = ieScale(testmovieshort(:,:,shiftval+1:567+1));
+%     err1 = sqrt((m1(:) - m2(:)).^2);
+%     figure; hist(err1(:),40);
+%     mean(err1(:)) %.170
+%     std(err1(:)) % .141
+    
 end
