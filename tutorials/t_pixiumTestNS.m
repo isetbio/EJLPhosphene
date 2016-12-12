@@ -313,9 +313,9 @@ for rsFactor = 2%[1 2 3 5 6]
         for jblock = 1:rsFactor
             blockctr = blockctr+1;
             if ismac || isunix
-                load([reconstructionRootPath '/dat/pixium/ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
+                load([phospheneRootPath '/dat/ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
             else
-                load([reconstructionRootPath '\dat\pixium\ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
+                load([phospheneRootPath '\dat\ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
             end
 %             clear movrecons_on_offHealthy            
 %             pOpt.innerRetina = innerRetina;
