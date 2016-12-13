@@ -80,13 +80,13 @@ params.fov = 1.6;
 % over the stimulus a number of times. The mosaic is necessarily small
 % because the training algorithm takes a long time.
 
-for rsFactor = 2%[1 2 3 5 6]
+for rsFactor = 1%[1 2 3 5 6]
     
     %% Resize the hallway movie stimulus for tiling
     rsFactor
     tic
-    load('C:\Users\James\Documents\MATLAB\github\EJLPhosphene\dat\stimuli\hallMovie.mat')
-    % load([reconstructionRootPath '\dat\stimuli\hallMovie.mat'])
+%     load('C:\Users\James\Documents\MATLAB\github\EJLPhosphene\dat\stimuli\hallMovie.mat')
+    load([phospheneRootPath '/dat/stimuli/hallMovie.mat'])
     szFrames = size(vidFrame,3);
     hallMovieResize = zeros(rsFactor*96,rsFactor*96,szFrames);
     for ii = 1:szFrames
@@ -334,26 +334,32 @@ for rsFactor = 2%[1 2 3 5 6]
     
     % set(fig,'position',[    624         437        1018         541]);
     set(fig,'position',[624   704   537   274]);
-    if ismac || isunix
-        aviobj = avifile([phospheneRootPath '/dat/prosthesis_recon_' num2str(rsFactor) '_ns.avi'])
-    else
-        aviobj = avifile([phospheneRootPath '\dat\prosthesis_recon_' num2str(rsFactor) '_ns.avi'])
-    end
-    aviobj.Fps = 30;
+%     if ismac || isunix
+%         aviobj = avifile([phospheneRootPath '/dat/prosthesis_recon_' num2str(rsFactor) '_ns.avi'])
+%     else
+%         aviobj = avifile([phospheneRootPath '\dat\prosthesis_recon_' num2str(rsFactor) '_ns.avi'])
+%     end
+%     aviobj.Fps = 30;
     shiftval = 4;
-    movieComb = 255*irradianceFraction*pulseDutyCycle*ieScale(movieRecon(:,:,1:567-shiftval+1));
-    movieComb(:,rsFactor*96+[1:rsFactor*96],:) = 255*irradianceFraction*pulseDutyCycle*ieScale(testmovieshort(:,:,shiftval+1:567+1));
+    movieComb = 255*irradianceFraction*pulseDutyCycle*ieScale(movieRecon(:,:,1:szLen-shiftval+1));
+    movieComb(:,rsFactor*96+[1:rsFactor*96],:) = 255*irradianceFraction*pulseDutyCycle*ieScale(testmovieshort(:,:,shiftval+1:szLen+1));
     
-    for k=1:size(movieRecon,3)-60
-        % imagesc(movieRecon(:,:,k)); colormap gray;
-        
-        image(movieComb(:,:,k)); colormap gray; axis image
-        caxis([0 255]);
-        F = getframe(fig);
-        aviobj = addframe(aviobj,F);
-    end
-    close(fig)
-    aviobj = close(aviobj);
+%     for k=1:size(movieRecon,3)-60
+%         % imagesc(movieRecon(:,:,k)); colormap gray;
+%         
+%         image(movieComb(:,:,k)); colormap gray; axis image
+%         caxis([0 255]);
+%         F = getframe(fig);
+%         aviobj = addframe(aviobj,F);
+%     end
+%     close(fig)
+%     aviobj = close(aviobj);
+    
+    %%
+    figure;
+    p.vname = [phospheneRootPath '/dat/prosthesis_recon_' num2str(rsFactor) '_ns.mp4']
+    p.save = true;
+    ieMovie(movieComb, p);
     
     %%
     % clear movieComb movieRecon testmovieshort vidFrame
