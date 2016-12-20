@@ -55,10 +55,12 @@ end
 % % load('/Users/james/Downloads/filters_mosaic_wn_all_42reps_overlap0_svd_1000_len_100.mat')
 % 
 % load('C:\Users\James\Documents\MATLAB\github\RGC-Reconstruction\dat\wn_Dec3_sp_filter_win1.mat');
+load(filterFile);
 if ismac || isunix
     load([phospheneRootPath '/dat/' filterFile]);
 else
-    load([phospheneRootPath '\dat\' filterFile]);
+    % load([phospheneRootPath '\dat\' filterFile]);
+    load([reconstructionRootPath '\dat\' filterFile]);
 end
 % 
 % load('C:\Users\James\Documents\MATLAB\github\RGC-Reconstruction\dat\wn_Dec3_sp_filter_new1.mat');
@@ -82,7 +84,7 @@ sizeSpikes = floor([ size(y{1},2) size(y{2},2) size(y{3},2) size(y{4},2)  ]/bloc
 
 % on Parasol
 spikesout = (y{1});%double(matfOff.spikesoutsm);
-numcells1 = 36;
+numcells1 = size(spikesout,1);
 
 spikeRespOn = zeros(size(spikesout,1), max(sizeSpikes));
 
@@ -90,24 +92,28 @@ spikeRespOn(:,1:floor(size(spikesout,2)/blocklength)) = downSampResp(spikesout, 
 %     spikeRespOn= zeros(size(downSampResp(spikesout, numcells1, blocklength)));
 
 % off Parasol
-numcells2 = 64;
+% numcells2 = 64;
 spikesout2 = (y{2});%double(matfOff.spikesoutsm);
+numcells2 = size(spikesout2,1);
 spikeRespOff = zeros(size(spikesout2,1), max(sizeSpikes));
 spikeRespOff(:,1:floor(size(spikesout2,2)/blocklength)) = ((downSampResp(spikesout2, numcells2, floor(size(spikesout2,2)/blocklength))));
 %     spikeRespOff = zeros(size(downSampResp(spikesout2, numcells2, blocklength)));
 
 % off Midget
-numcells3 = 225;
+% numcells3 = 225;
 spikesout3 = (y{3});%double(matfOff.spikesoutsm);
+
+numcells3 = size(spikesout3,1);
 
 spikeRespOffM = zeros(size(spikesout3,1), max(sizeSpikes));
 spikeRespOffM(:,1:floor(size(spikesout3,2)/blocklength)) = ((downSampResp(spikesout3, numcells3, floor(size(spikesout3,2)/blocklength))));
 %     spikeRespOffM = zeros(size(downSampResp(spikesout3, numcells3, blocklength)));
 
 % on Midget
-numcells4 = 169;
+% numcells4 = 169;
 spikesout4 = (y{4});%double(matfOff.spikesoutsm);
 
+numcells4 = size(spikesout4,1);
 spikeRespOnM = zeros(size(spikesout4,1), max(sizeSpikes));
 spikeRespOnM(:,1:floor(size(spikesout4,2)/blocklength)) = ((downSampResp(spikesout4, numcells4, floor(size(spikesout4,2)/blocklength))));
 %     spikeRespOnM = zeros(size(downSampResp(spikesout4, numcells4, blocklength)));
