@@ -1,17 +1,17 @@
 function innerRetinaInput = irActivationFromElectrode(innerRetina, electrodeArray, retinalPatchWidth, metersPerPixel, nTileRows, nTileCols, mosaicOffset, params, offFlag)
 
-if offFlag
-    electrodeArrayCopy.activationDS = electrodeArray.activationDSoff;
-else
-    electrodeArrayCopy.activationDS = electrodeArray.activationDS;
-end
-
 numberElectrodesX = floor(retinalPatchWidth/electrodeArray.width)+4;
 numberElectrodesY = floor(retinalPatchWidth/electrodeArray.width)+4;
 numberElectrodes = numberElectrodesX*numberElectrodesY;
 
 % for frame = 1:params.nSteps
     for mosaicInd = 1:length(innerRetina.mosaic)
+        
+        if offFlag(mosaicInd)
+            electrodeArrayCopy.activationDS = electrodeArray.activationDSoff;
+        else
+            electrodeArrayCopy.activationDS = electrodeArray.activationDS;
+        end
         [xc, yc] = size(innerRetina.mosaic{mosaicInd}.cellLocation);
         for xind = 1:xc
             for yind = 1:yc

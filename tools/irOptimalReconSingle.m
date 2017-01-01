@@ -27,10 +27,12 @@ numbins = p.Results.numbins;
 
 y = cell(length(innerRetina.mosaic));
 
+dt = innerRetina.mosaic{1}.dt;
+
 % Loop over the mosaic objects
 for mosaicInd = 1:length(innerRetina.mosaic)
     
-    cellCtr=0; dt = .01;
+    cellCtr=0; 
     maxTrials = innerRetina.mosaic{1}.numberTrials;
     nCells = size(innerRetina.mosaic{mosaicInd}.responseSpikes);
     
@@ -57,7 +59,7 @@ end
 % load('C:\Users\James\Documents\MATLAB\github\RGC-Reconstruction\dat\wn_Dec3_sp_filter_win1.mat');
 load(filterFile);
 if ismac || isunix
-    load([phospheneRootPath '/dat/' filterFile]);
+    load([reconstructionRootPath '/dat/' filterFile]);
 else
     % load([phospheneRootPath '\dat\' filterFile]);
     load([reconstructionRootPath '\dat\' filterFile]);
@@ -79,7 +81,7 @@ recons_stim_on_off_dropout = cell(length(innerRetina.mosaic),1);
 movrecons_on_off_dropout = cell(length(innerRetina.mosaic),1);
 
 
-blocklength = 100;
+blocklength = round(1/dt);
 sizeSpikes = floor([ size(y{1},2) size(y{2},2) size(y{3},2) size(y{4},2)  ]/blocklength);
 
 % on Parasol
@@ -88,7 +90,7 @@ numcells1 = size(spikesout,1);
 
 spikeRespOn = zeros(size(spikesout,1), max(sizeSpikes));
 
-spikeRespOn(:,1:floor(size(spikesout,2)/blocklength)) = downSampResp(spikesout, numcells1, floor(size(spikesout,2)/blocklength));
+spikeRespOn(:,1:floor(size(spikesout,2)/blocklength)) = downSampResp(spikesout, numcells1, floor(size(spikesout,2)/blocklength),dt);
 %     spikeRespOn= zeros(size(downSampResp(spikesout, numcells1, blocklength)));
 
 % off Parasol
@@ -96,7 +98,7 @@ spikeRespOn(:,1:floor(size(spikesout,2)/blocklength)) = downSampResp(spikesout, 
 spikesout2 = (y{2});%double(matfOff.spikesoutsm);
 numcells2 = size(spikesout2,1);
 spikeRespOff = zeros(size(spikesout2,1), max(sizeSpikes));
-spikeRespOff(:,1:floor(size(spikesout2,2)/blocklength)) = ((downSampResp(spikesout2, numcells2, floor(size(spikesout2,2)/blocklength))));
+spikeRespOff(:,1:floor(size(spikesout2,2)/blocklength)) = ((downSampResp(spikesout2, numcells2, floor(size(spikesout2,2)/blocklength),dt)));
 %     spikeRespOff = zeros(size(downSampResp(spikesout2, numcells2, blocklength)));
 
 % off Midget
@@ -106,7 +108,7 @@ spikesout3 = (y{3});%double(matfOff.spikesoutsm);
 numcells3 = size(spikesout3,1);
 
 spikeRespOffM = zeros(size(spikesout3,1), max(sizeSpikes));
-spikeRespOffM(:,1:floor(size(spikesout3,2)/blocklength)) = ((downSampResp(spikesout3, numcells3, floor(size(spikesout3,2)/blocklength))));
+spikeRespOffM(:,1:floor(size(spikesout3,2)/blocklength)) = ((downSampResp(spikesout3, numcells3, floor(size(spikesout3,2)/blocklength),dt)));
 %     spikeRespOffM = zeros(size(downSampResp(spikesout3, numcells3, blocklength)));
 
 % on Midget
@@ -115,7 +117,7 @@ spikesout4 = (y{4});%double(matfOff.spikesoutsm);
 
 numcells4 = size(spikesout4,1);
 spikeRespOnM = zeros(size(spikesout4,1), max(sizeSpikes));
-spikeRespOnM(:,1:floor(size(spikesout4,2)/blocklength)) = ((downSampResp(spikesout4, numcells4, floor(size(spikesout4,2)/blocklength))));
+spikeRespOnM(:,1:floor(size(spikesout4,2)/blocklength)) = ((downSampResp(spikesout4, numcells4, floor(size(spikesout4,2)/blocklength),dt)));
 %     spikeRespOnM = zeros(size(downSampResp(spikesout4, numcells4, blocklength)));
 
 % spikesout = vertcat(onSR(:,1:15000), offSR(:,1:15000), onPSR(:,1:15000), offPSR(:,1:15000));
@@ -128,10 +130,34 @@ spikeRespOnOff =vertcat(spikeRespOn,spikeRespOff, spikeRespOffM,spikeRespOnM);
 %     spikeRespOnOff =vertcat(zeros(size(spikeRespOn)),zeros(size(spikeRespOff)), ((spikeRespOffM)),((spikeRespOnM)));
 
 % numbins = 4;
-recons_stim_on_off{mosaicInd,1} = reconsFromFiltLen(filterMat, spikeRespOnOff, numbins);
-% filterMatInd = find(abs(filterMat)<0.002); filterMat2 = filterMat; filterMat2(filterMatInd)=0;
-% recons_stim_on_off{mosaicInd,1} = reconsFromFiltLen(filterMat2, spikeRespOnOff, numbins);
-movrecons_on_off_full = reshape(recons_stim_on_off{mosaicInd,1},96,96,size(recons_stim_on_off{mosaicInd,1},2));
+% spikeRespOnOff(1:890,:) = zeros(890,size(spikeRespOnOff,2));
+
+recons_stim_on_off{mosaicInd,1} = reconsFromFiltLen(filterMat, 1*spikeRespOnOff, numbins);
+
+% [mgr,mgc] = meshgrid(1:100,1:100);
+% 
+% [cmax,cind] = max(abs(filterMat),[],2);
+% [fmaxc,fmaxr] = ind2sub([100 100],cind);
+% 
+% mgrmat = mgr(:)*ones(1,size(fmaxr,1));
+% fmaxrmat = ones(size(mgrmat,1),1)*fmaxr';
+% mgrd = ((mgrmat - fmaxrmat)').^2;
+% 
+% mgcmat = mgc(:)*ones(1,size(fmaxc,1));
+% fmaxcmat = ones(size(mgcmat,1),1)*fmaxc';
+% mgcd = ((mgcmat - fmaxcmat)').^2;
+% 
+% dp = sqrt(mgrd+mgcd);
+% filterMat2 = filterMat;
+% filterMat2(dp>8) = 0;
+% 
+% recons_stim_on_off{mosaicInd,1} = reconsFromFiltLen(filterMat2, 1*spikeRespOnOff, numbins);
+
+% % figure; ecdf(filterMat(:));
+% filterMatInd = find(abs(filterMat)<0.0005); filterMat2 = filterMat; filterMat2(filterMatInd)=0;
+% recons_stim_on_off{mosaicInd,1} = reconsFromFiltLen(filterMat2, 1*spikeRespOnOff, numbins);
+szMov = sqrt(size(recons_stim_on_off{mosaicInd,1},1));
+movrecons_on_off_full = reshape(recons_stim_on_off{mosaicInd,1},szMov,szMov,size(recons_stim_on_off{mosaicInd,1},2));
 
 %% Reconstruction with a random subset of spiking cells zeroed out
 deadIndicesAll = randperm(size(spikeRespOnOff,1));
@@ -142,5 +168,5 @@ spikeRespOnOffDead(deadIndices,:) = zeros(length(deadIndices),size(spikeRespOnOf
 
 recons_stim_on_off_dropout{mosaicInd,1} = reconsFromFiltLen(filterMat, spikeRespOnOffDead, numbins);
 
-movrecons_on_off_dropout = reshape(recons_stim_on_off_dropout{mosaicInd,1},96,96,size(recons_stim_on_off{mosaicInd,1},2));
+movrecons_on_off_dropout = reshape(recons_stim_on_off_dropout{mosaicInd,1},szMov,szMov,size(recons_stim_on_off{mosaicInd,1},2));
 % movrecons_on_off = .5*movrecons_on_off_full./mean(movrecons_on_off_full(:));
