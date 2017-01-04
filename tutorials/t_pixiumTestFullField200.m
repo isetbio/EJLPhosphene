@@ -45,13 +45,16 @@ patchEccentricity = 4; % mm
 % Set horizontal field of view
 fov = 1.6*2;
 
+maxFreq = 100;
+
 % % % % % % KNOBS
 pulseFreq = 100;           % Hz, electrode pulse frequency
 pulseDutyCycle = .2;       % Fraction of cycle pulse is on
-irradianceFraction = .5;  % Fraction of maximum irradiance 
+irradianceFraction = .5;   % Fraction of maximum irradiance 
+fadeTimeConstant = 5;      % Sets how quickly phosphene fades as f(energy); bigger time const means slower fade
 
 % Stimulus length
-nSteps = 520;
+nSteps = 140;
 
 percentDead = 0;
 
@@ -87,16 +90,10 @@ for rsFactor = 1%[1 2 3 5 6]
     %% Resize the hallway movie stimulus for tiling
     rsFactor
     tic
-%     load('C:\Users\James\Documents\MATLAB\github\EJLPhosphene\dat\stimuli\hallMovie.mat')
-    load([phospheneRootPath '/dat/stimuli/hallMovie.mat'])
-    szFrames = size(vidFrame,3);
-    hallMovieResize = zeros(rsFactor*stimSize,rsFactor*stimSize,szFrames);
-    for ii = 1:szFrames
-        hallMovieResize(:,:,ii) = imresize(vidFrame(:,:,ii),[rsFactor*stimSize,rsFactor*stimSize]);
-    end
-    
-    % Set hallway movie stimulus
-    testmovieshort = (255*ieScale(hallMovieResize)); clear hallMovieResize;
+    % Set full field movie stimulus
+
+    fullFieldMovie = buildFullField(200,200);
+    testmovieshort = (255*ieScale(fullFieldMovie)); 
     
     % Stimulus parameters
     paramsStim.nsteps = 1;%nFrames;%size(testmovieshort,3);
@@ -246,7 +243,7 @@ for rsFactor = 1%[1 2 3 5 6]
             szAct = size(electrodeArray.activation);
             electrodeArray.activationDS = zeros(szAct);
             for iSample = 1:szAct(3)
-                if mod(iSample,100/pulseFreq)==0
+                if mod(iSample,maxFreq/pulseFreq)==0
                     electrodeArray.activationDS(:,:,iSample) = electrodeArray.activation(:,:,iSample);
                     electrodeArray.activationDSoff(:,:,iSample) = 1-electrodeArray.activation(:,:,iSample);
                 end
@@ -301,11 +298,11 @@ for rsFactor = 1%[1 2 3 5 6]
             
             %% Save for tiling       
             
-            if ismac || isunix
-                save([phospheneRootPath '/dat/ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
-            else
-                save([phospheneRootPath '\dat\ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
-            end
+%             if ismac || isunix
+%                 save([phospheneRootPath '/dat/ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
+%             else
+%                 save([phospheneRootPath '\dat\ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
+%             end
             toc
         end
     end
@@ -315,23 +312,23 @@ for rsFactor = 1%[1 2 3 5 6]
     movieRecon = zeros(rsFactor*stimSize,rsFactor*stimSize,szLen);
     blockctr = 0; percentDead = 0; numbins = pOpt.numbins;
     tic
-    for iblock = 1:rsFactor
-        for jblock = 1:rsFactor
-            blockctr = blockctr+1;
-            if ismac || isunix
-                load([phospheneRootPath '/dat/ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
-            else
-%                 load([phospheneRootPath '\dat\ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
-            end
-%             clear movrecons_on_offHealthy            
-%             pOpt.innerRetina = innerRetina;
-%             [movrecons_on_offHealthy, movrecons_on_offHealthy_dropout] = irOptimalReconSingle(pOpt);
-            szLen = size(movrecons_on_offHealthy,3);
-            movieTmp =  movrecons_on_offHealthy;
-            movieRecon((iblock-1)*stimSize+[1:stimSize],(jblock-1)*stimSize+[1:stimSize],1:szLen) = movieTmp;% 255*ieScale(movieTmp - mean(movieTmp(:)));
-            clear movrecons_on_offHealthy
-        end
-    end
+%     for iblock = 1:rsFactor
+%         for jblock = 1:rsFactor
+%             blockctr = blockctr+1;
+%             if ismac || isunix
+%                 load([phospheneRootPath '/dat/ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
+%             else
+% %                 load([phospheneRootPath '\dat\ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
+%             end
+% %             clear movrecons_on_offHealthy            
+% %             pOpt.innerRetina = innerRetina;
+% %             [movrecons_on_offHealthy, movrecons_on_offHealthy_dropout] = irOptimalReconSingle(pOpt);
+%             szLen = size(movrecons_on_offHealthy,3);
+%             movieTmp =  movrecons_on_offHealthy;
+%             movieRecon((iblock-1)*stimSize+[1:stimSize],(jblock-1)*stimSize+[1:stimSize],1:szLen) = movieTmp;% 255*ieScale(movieTmp - mean(movieTmp(:)));
+%             clear movrecons_on_offHealthy
+%         end
+%     end
      
 %     figure; ieMovie(movieRecon);
     
@@ -347,8 +344,14 @@ for rsFactor = 1%[1 2 3 5 6]
 %     end
 %     aviobj.Fps = 30;
 %     movieRecon = movrecons_on_offHealthy;
-    shiftval = 4;
-    szLen = 596;
+
+    integratedEnergy = [0:size(testmovieshort,3)-1]*irradianceFraction*pulseDutyCycle*(pulseFreq/maxFreq);
+    fadeVal = exp(-integratedEnergy/fadeTimeConstant);
+
+    shiftval = 1;
+    szLen = size(testmovieshort,3)-shiftval;
+    movieReconXW = RGB2XWFormat(movrecons_on_offHealthy(:,:,1:szLen+shiftval)).*(ones(size(movrecons_on_offHealthy,1)*size(movrecons_on_offHealthy,2),1)*fadeVal);
+    movieRecon = XW2RGBFormat(movieReconXW,size(movrecons_on_offHealthy,1),size(movrecons_on_offHealthy,2));
     movieComb = 255*irradianceFraction*pulseDutyCycle*ieScale(movieRecon(:,:,1:szLen-shiftval+1));
     movieComb(:,rsFactor*stimSize+[1:rsFactor*stimSize],:) = 255*irradianceFraction*pulseDutyCycle*ieScale(testmovieshort(:,:,shiftval+1:szLen+1));
     maxc = max(movieComb(:)); minc = min(movieComb(:));
@@ -367,9 +370,9 @@ for rsFactor = 1%[1 2 3 5 6]
     
     %%
     figure;
-    p.vname = [phospheneRootPath '/dat/pixiumBig/prosthesis_dec20_recon_' num2str(rsFactor) '_ns_fr25sum.avi']
+    p.vname = [phospheneRootPath '/dat/pixiumBig/prosthesis_fullField_' num2str(rsFactor) '_ns_fr25sum.avi']
     p.save = true;
-    p.FrameRate = 25;
+    p.FrameRate = 30;
     ieMovie(movieComb, p);
     
     %%
