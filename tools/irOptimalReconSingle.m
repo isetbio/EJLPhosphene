@@ -57,12 +57,25 @@ end
 % % load('/Users/james/Downloads/filters_mosaic_wn_all_42reps_overlap0_svd_1000_len_100.mat')
 % 
 % load('C:\Users\James\Documents\MATLAB\github\RGC-Reconstruction\dat\wn_Dec3_sp_filter_win1.mat');
-load(filterFile);
-if ismac || isunix
-    load([reconstructionRootPath '/dat/' filterFile]);
+
+
+[a,b]=which('rdtclient');
+
+if isempty(a)
+    load(filterFile);
+    % if ismac || isunix
+    %     load([reconstructionRootPath '/dat/' filterFile]);
+    % else
+    %     % load([phospheneRootPath '\dat\' filterFile]);
+    %     load([reconstructionRootPath '\dat\' filterFile]);
+    % end
+    
 else
-    % load([phospheneRootPath '\dat\' filterFile]);
-    load([reconstructionRootPath '\dat\' filterFile]);
+    rdt = RdtClient('isetbio');
+    rdt.crp('/resources/data/rgc');
+    
+    data = rdt.readArtifact('pix1_nsBig_100Hz_1st_sv05__mosaicAll_8372855', 'type', 'mat');
+    filterMat = data.filterMat;
 end
 % 
 % load('C:\Users\James\Documents\MATLAB\github\RGC-Reconstruction\dat\wn_Dec3_sp_filter_new1.mat');

@@ -264,7 +264,19 @@ for rsFactor = 1%[1 2 3 5 6]
             if isunix || ismac
 %                 load([phospheneRootPath '/dat/mosaicAll_pix_ns.mat'])
 %                 load('mosaicAll_772530.mat');
-                load('mosaicAll_8372855.mat');
+                                
+                [a,b]=which('rdtclient');
+                
+                if isempty(a)
+                    load('mosaicAll_8372855.mat');
+                else
+                    
+                    rdt = RdtClient('isetbio');
+                    rdt.crp('/resources/data/rgc');
+                    
+                    data = rdt.readArtifact('mosaicAll_8372855', 'type', 'mat');
+                    innerRetina = data.innerRetina;
+                end
             else
 %                 load([phospheneRootPath '\dat\mosaicAll_pix_ns.mat'])
             end

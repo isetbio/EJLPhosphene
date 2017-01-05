@@ -33,28 +33,18 @@ tic
 %% Parameters to alter
 clear electrodeArray
 
+dropoutFlag = 0;
+
 % Electrode size
 % Set the size of implant pixels
-electrodeArray.width = 25e-6; % meters
+electrodeArray.width = 70e-6; % meters
 % electrodeArray.width = 140e-6; % meters
 
-% Retinal patch eccentricity
-patchEccentricity = 4; % mm
-
-% Field of view/stimulus size
-% Set horizontal field of view
-fov = 1.6*2;
-
-maxFreq = 100;
-
 % % % % % % KNOBS
-pulseFreq = 100;           % Hz, electrode pulse frequency
-pulseDutyCycle = .2;       % Fraction of cycle pulse is on
+pulseFreq = 30;           % Hz, electrode pulse frequency
+pulseDutyCycle = .3;       % Fraction of cycle pulse is on
 irradianceFraction = .5;   % Fraction of maximum irradiance 
 fadeTimeConstant = 5;      % Sets how quickly phosphene fades as f(energy); bigger time const means slower fade
-
-% Stimulus length
-nSteps = 140;
 
 percentDead = 0;
 
@@ -71,6 +61,18 @@ percentDead = 0;
 % params.nSteps = nSteps;
 %
 % size(iStim.sceneRGB)
+
+% Retinal patch eccentricity
+patchEccentricity = 4; % mm
+
+% Field of view/stimulus size
+% Set horizontal field of view
+fov = 1.6*2;
+
+maxFreq = 30;
+
+% Stimulus length
+nSteps = 140;
 
 params.nSteps = nSteps;
 params.row = 200;
@@ -259,9 +261,21 @@ for rsFactor = 1%[1 2 3 5 6]
             %% Build RGC array for healthy retina            
             clear paramsIR innerRetina
             if isunix || ismac
-%                 load([phospheneRootPath '/dat/mosaicAll_pix_ns.mat'])
-%                 load('mosaicAll_772530.mat');
-                load('mosaicAll_8372855.mat');
+                %                 load([phospheneRootPath '/dat/mosaicAll_pix_ns.mat'])
+                %                 load('mosaicAll_772530.mat');
+                
+                [a,b]=which('rdtclient');
+                
+                if isempty(a)
+                    load('mosaicAll_8372855.mat');
+                else
+                    
+                    rdt = RdtClient('isetbio');
+                    rdt.crp('/resources/data/rgc');
+                    
+                    data = rdt.readArtifact('mosaicAll_8372855', 'type', 'mat');
+                    innerRetina = data.innerRetina;
+                end
             else
 %                 load([phospheneRootPath '\dat\mosaicAll_pix_ns.mat'])
             end
@@ -288,12 +302,13 @@ for rsFactor = 1%[1 2 3 5 6]
             %% Do optimal reconstruction
             
             pOpt.innerRetina = innerRetina;
-            pOpt.percentDead = 0;
+            pOpt.percentDead = percentDead;
             pOpt.numbins = 1;
 %             pOpt.filterFile = 'pix1_long_filter_nsBig_100hz_4st';
 %             pOpt.filterFile = 'pixiumBig/pix1_nsBig_100Hz_4st__mosaicAll_772530';
 %             pOpt.filterFile = 'pixiumBig/pix1_nsBig_100Hz_1st_sv125__mosaicAll_772530';
             pOpt.filterFile = 'pix1_nsBig_100Hz_1st_sv05__mosaicAll_8372855';
+            pOpt.percentDead = 0.8;
             [movrecons_on_offHealthy, movrecons_on_offHealthy_dropout] = irOptimalReconSingle(pOpt);
             
             %% Save for tiling       
@@ -350,10 +365,16 @@ for rsFactor = 1%[1 2 3 5 6]
 
     shiftval = 1;
     szLen = size(testmovieshort,3)-shiftval;
-    movieReconXW = RGB2XWFormat(movrecons_on_offHealthy(:,:,1:szLen+shiftval)).*(ones(size(movrecons_on_offHealthy,1)*size(movrecons_on_offHealthy,2),1)*fadeVal);
+    switch dropoutFlag
+        case 0
+            movieReconXW = RGB2XWFormat(movrecons_on_offHealthy(:,:,1:szLen+shiftval)).*(ones(size(movrecons_on_offHealthy,1)*size(movrecons_on_offHealthy,2),1)*fadeVal);
+        case 1
+            movieReconXW = RGB2XWFormat(movrecons_on_offHealthy_dropout(:,:,1:szLen+shiftval)).*(ones(size(movrecons_on_offHealthy,1)*size(movrecons_on_offHealthy,2),1)*fadeVal);
+    end
     movieRecon = XW2RGBFormat(movieReconXW,size(movrecons_on_offHealthy,1),size(movrecons_on_offHealthy,2));
     movieComb = 255*irradianceFraction*pulseDutyCycle*ieScale(movieRecon(:,:,1:szLen-shiftval+1));
     movieComb(:,rsFactor*stimSize+[1:rsFactor*stimSize],:) = 255*irradianceFraction*pulseDutyCycle*ieScale(testmovieshort(:,:,shiftval+1:szLen+1));
+%     movieComb(:,rsFactor*stimSize+[1:rsFactor*stimSize],:) = 255*ieScale(testmovieshort(:,:,shiftval+1:szLen+1));
     maxc = max(movieComb(:)); minc = min(movieComb(:));
 %     for k=1:size(movieRecon,3)-60
 %         % imagesc(movieRecon(:,:,k)); colormap gray;
@@ -367,10 +388,10 @@ for rsFactor = 1%[1 2 3 5 6]
 %     end
 %     close(fig)
 %     aviobj = close(aviobj);
-    
+%     movieComb(1,1,:) = 255;
     %%
     figure;
-    p.vname = [phospheneRootPath '/dat/pixiumBig/prosthesis_fullField_' num2str(rsFactor) '_ns_fr25sum.avi']
+    p.vname = [phospheneRootPath '/dat/pixiumBig/prosthesis_fullField_' num2str(rsFactor) '_ns_duty_' num2str(pulseDutyCycle*10) '_freq_' num2str(pulseFreq) '.avi']
     p.save = true;
     p.FrameRate = 30;
     ieMovie(movieComb, p);
