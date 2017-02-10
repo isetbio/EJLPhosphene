@@ -39,7 +39,7 @@ electrodeArray.width = 25e-6; % meters
 % electrodeArray.width = 140e-6; % meters
 
 % Retinal patch eccentricity
-patchEccentricity = 4; % mm
+patchEccentricity = 1.5; % mm
 
 % Field of view/stimulus size
 % Set horizontal field of view
@@ -47,8 +47,8 @@ fov = 1.6*2;
 
 % % % % % % KNOBS
 pulseFreq = 100;           % Hz, electrode pulse frequency
-pulseDutyCycle = .2;       % Fraction of cycle pulse is on
-irradianceFraction = .5;  % Fraction of maximum irradiance 
+pulseDutyCycle = 1;       % Fraction of cycle pulse is on
+irradianceFraction = 1;  % Fraction of maximum irradiance 
 
 % Stimulus length
 nSteps = 520;
@@ -87,16 +87,24 @@ for rsFactor = 1%[1 2 3 5 6]
     %% Resize the hallway movie stimulus for tiling
     rsFactor
     tic
-%     load('C:\Users\James\Documents\MATLAB\github\EJLPhosphene\dat\stimuli\hallMovie.mat')
-    load([phospheneRootPath '/dat/stimuli/hallMovie.mat'])
-    szFrames = size(vidFrame,3);
-    hallMovieResize = zeros(rsFactor*stimSize,rsFactor*stimSize,szFrames);
-    for ii = 1:szFrames
-        hallMovieResize(:,:,ii) = imresize(vidFrame(:,:,ii),[rsFactor*stimSize,rsFactor*stimSize]);
-    end
+%     load([phospheneRootPath '/dat/stimuli/hallMovie.mat'])
+%     szFrames = size(vidFrame,3);
+%     hallMovieResize = zeros(rsFactor*stimSize,rsFactor*stimSize,szFrames);
+%     for ii = 1:szFrames
+%         hallMovieResize(:,:,ii) = imresize(vidFrame(:,:,ii),[rsFactor*stimSize,rsFactor*stimSize]);
+%     end
+%     
+%     % Set hallway movie stimulus
+%     testmovieshort = (255*ieScale(hallMovieResize)); clear hallMovieResize;
     
-    % Set hallway movie stimulus
-    testmovieshort = (255*ieScale(hallMovieResize)); clear hallMovieResize;
+%     
+%     numRows = 100; numCols = 100; gratingFreq = 4;
+%     gratingsMovie = buildGratings(numRows,numCols,gratingFreq);
+%     testmovieshort = (255*ieScale(gratingsMovie)); 
+    
+    load([phospheneRootPath '/zrenner_em.mat'])
+    testmovieshort = (255*ieScale(movsm)); clear movsm;
+    
     
     % Stimulus parameters
     paramsStim.nsteps = 1;%nFrames;%size(testmovieshort,3);
@@ -158,7 +166,7 @@ for rsFactor = 1%[1 2 3 5 6]
             osHealthy = osSet(osHealthy, 'rgbData', sceneRGB_Healthy);            
             
         
-            %% Build RGC array for healthy retina            
+            %% Build RGC array for healthy rloaloetina            
             clear paramsIR innerRetina
             if isunix || ismac
 %                 load([phospheneRootPath '/dat/mosaicAll_pix_ns.mat'])
@@ -166,8 +174,9 @@ for rsFactor = 1%[1 2 3 5 6]
 %                 load('mosaicAll_8372855.mat');
 %                     load('mosaicAll_19261.mat');
 %                     load('mosaicAll_51550348.mat');
-                    load('mosaicAll_1246640.mat');
-%                     load('mosaicAll_20116.mat');
+%                     load('mosaicAll_1246640.mat');
+
+                load('mosaicAll_35336498.mat');
             else
 %                 load([phospheneRootPath '\dat\mosaicAll_pix_ns.mat'])
             end
@@ -189,36 +198,31 @@ for rsFactor = 1%[1 2 3 5 6]
 
 %             mosaicFile = '_mosaicAll_19261';
 %             mosaicFile = '_mosaicAll_51550348';
-            mosaicFile = '_mosaicAll_1246640';
-%             mosaicFile = '_mosaicAll_20116';
+%             mosaicFile = '_mosaicAll_1246640';
 % 
+                mosaicFile = '_mosaicAll_35336498';
             pOpt.numbins = 1;
 %             filterFile = ['ns100/filters_nsDec22_1st_sv05_' mosaicFile];
 %                 filterFile = ['ns100_r2/filters_ns100_Dec31_1st_sv05_' mosaicFile];
                 
 %             filterFile = ['ns100_r2_10/filters_ns100_jan1_1st_sv20_' mosaicFile];
+            pOpt.filterFile = 'pixium15_100/filters_pix1_nsBig15_1st_sv025__mosaicAll_35336498.mat';
+       
 %             pOpt.numbins = 2;
 %             filterFile = ['ns200/filters_nsDec22_2st_sv375fig_' mosaicFile];
 
-            pOpt.numbins = 1;
+%             pOpt.numbins = 4;
 %             filterFile = ['ns200/filters_nsDec22_4st_sv075_' mosaicFile];
 %             filterFile = ['ns200/filters_nsDec22_4st_sv005_' mosaicFile];
 
-%             filterFile = ['ns100_r2_10/filters_ns1002_jan1_1st3_sv20_' mosaicFile];
-            
-%             filterFile = ['ns100_r2_10/filters_ns100_jan1_1st_sv05_' mosaicFile];
-            
-%             filterFile = ['ns100_r2_10/filters_ns100_jan1_1st_sh9_sv20_' mosaicFile];
-             filterFile = ['ns100_r2_10/filters2_ns100_feb6_sh9_sv40_tr83' mosaicFile];
-            
-%             filterFile = ['ns100_r2_10_regmos/filters_ns100_regmos_1st_sh9_sv30_' mosaicFile];
+%             filterFile = ['ns100_r2_10/filters_ns1002_jan1_4st3_sv20_' mosaicFile];
 %             filterFile = ['ns100/filters_nsDec22_4st_sv05_' mosaicFile];
 % 
 %             pOpt.numbins = 8;
 % % %             filterFile = ['ns200/filters_nsDec22_8st_sv125_' mosaicFile];
 %             filterFile = ['ns200/filters_nsDec22_8st_sv03_' mosaicFile];
 
-            pOpt.filterFile = filterFile;
+%             pOpt.filterFile = filterFile;
             [movrecons_on_offHealthy, movrecons_on_offHealthy_dropout] = irOptimalReconSingle(pOpt);
             figure; ieMovie(movrecons_on_offHealthy);
             %% Save for tiling       
@@ -268,10 +272,10 @@ for rsFactor = 1%[1 2 3 5 6]
 %         aviobj = avifile([phospheneRootPath '\dat\prosthesis_dec20_recon_' num2str(rsFactor) '_ns.avi'])
 %     end
 %     aviobj.Fps = 30;
-    movieRecon = movrecons_on_offHealthy;
-    shiftval = 9;
+    movieRecon = movrecons_on_offHealthy(:,:,1:size(testmovieshort,3));
+    shiftval = 10;
     clear movieComb
-    szLen = 596;
+    szLen = size(movieRecon,3)-shiftval-1;
     movieComb = 255*irradianceFraction*pulseDutyCycle*ieScale(movieRecon(:,:,1:szLen-shiftval+1));
     movieComb(:,rsFactor*stimSize+[1:rsFactor*stimSize],:) = 255*irradianceFraction*pulseDutyCycle*ieScale(testmovieshort(:,:,shiftval+1:szLen+1));
     maxc = max(movieComb(:)); minc = min(movieComb(:));
@@ -289,25 +293,14 @@ for rsFactor = 1%[1 2 3 5 6]
 %     aviobj = close(aviobj);
     
     %%
-%     figure;
-%    % p.vname = [phospheneRootPath '/dat/pixiumBig/prosthesis_dec20_recon_' num2str(rsFactor) '_ns_fr25sum.avi']
-%     p.vname = [reconstructionRootPath '/dat/ns100_r2/ns_Dec31_recon_' num2str(rsFactor) '_8st_ev125.avi']
-%   
-%     p.save = false;
-%     p.FrameRate = 25;
-%     ieMovie(movieComb, p);
+    figure;
+   % p.vname = [phospheneRootPath '/dat/pixiumBig/prosthesis_dec20_recon_' num2str(rsFactor) '_ns_fr25sum.avi']
+    p.vname = [reconstructionRootPath '/dat/ns100_r2/ns_Dec31_recon_' num2str(rsFactor) '_8st_ev125.avi']
+  
+    p.save = false;
+    p.FrameRate = 25;
+    ieMovie(movieComb, p);
     
-    %%
-    
-    mc1 = ieScale(movieRecon(:,:,1:szLen-shiftval+1));
-    mc2 = ieScale(testmovieshort(:,:,shiftval+1:szLen+1));
-    errmov =mc1-mc2;
-    errtot = ((errmov.^2));
-    figure; ieMovie(errmov);
-    figure; subplot(131); imagesc(mc1(:,:,1)); subplot(132); imagesc(mc2(:,:,1)); subplot(133); imagesc(mc1(:,:,1)-mc2(:,:,1));
-    
-%     3: rms = .156, rss = .1981
-%       1: .1596, .202
     %%
     % clear movieComb movieRecon testmovieshort vidFrame
     toc

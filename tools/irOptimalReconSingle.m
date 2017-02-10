@@ -59,9 +59,9 @@ end
 % load('C:\Users\James\Documents\MATLAB\github\RGC-Reconstruction\dat\wn_Dec3_sp_filter_win1.mat');
 
 
-[a,b]=which('rdtclient');
-
-if isempty(a)
+% [a,b]=which('rdtclient');
+% 
+% if isempty(a)
     load(filterFile);
     % if ismac || isunix
     %     load([reconstructionRootPath '/dat/' filterFile]);
@@ -70,13 +70,13 @@ if isempty(a)
     %     load([reconstructionRootPath '\dat\' filterFile]);
     % end
     
-else
-    rdt = RdtClient('isetbio');
-    rdt.crp('/resources/data/rgc');
-    
-    data = rdt.readArtifact('pix1_nsBig_100Hz_1st_sv05__mosaicAll_8372855', 'type', 'mat');
-    filterMat = data.filterMat;
-end
+% else
+%     rdt = RdtClient('isetbio');
+%     rdt.crp('/resources/data/rgc');
+%     
+%     data = rdt.readArtifact('pix1_nsBig_100Hz_1st_sv05__mosaicAll_8372855', 'type', 'mat');
+%     filterMat = data.filterMat;
+% end
 % 
 % load('C:\Users\James\Documents\MATLAB\github\RGC-Reconstruction\dat\wn_Dec3_sp_filter_new1.mat');
 
@@ -145,26 +145,26 @@ spikeRespOnOff =vertcat(spikeRespOn,spikeRespOff, spikeRespOffM,spikeRespOnM);
 % numbins = 4;
 % spikeRespOnOff(1:890,:) = zeros(890,size(spikeRespOnOff,2));
 
-recons_stim_on_off{mosaicInd,1} = reconsFromFiltLen(filterMat, 1*spikeRespOnOff, numbins);
+% recons_stim_on_off{mosaicInd,1} = reconsFromFiltLen(filterMat, 1*spikeRespOnOff, numbins);
 
-% [mgr,mgc] = meshgrid(1:100,1:100);
-% 
-% [cmax,cind] = max(abs(filterMat),[],2);
-% [fmaxc,fmaxr] = ind2sub([100 100],cind);
-% 
-% mgrmat = mgr(:)*ones(1,size(fmaxr,1));
-% fmaxrmat = ones(size(mgrmat,1),1)*fmaxr';
-% mgrd = ((mgrmat - fmaxrmat)').^2;
-% 
-% mgcmat = mgc(:)*ones(1,size(fmaxc,1));
-% fmaxcmat = ones(size(mgcmat,1),1)*fmaxc';
-% mgcd = ((mgcmat - fmaxcmat)').^2;
-% 
-% dp = sqrt(mgrd+mgcd);
-% filterMat2 = filterMat;
-% filterMat2(dp>8) = 0;
-% 
-% recons_stim_on_off{mosaicInd,1} = reconsFromFiltLen(filterMat2, 1*spikeRespOnOff, numbins);
+[mgr,mgc] = meshgrid(1:100,1:100);
+
+[cmax,cind] = max(abs(filterMat),[],2);
+[fmaxc,fmaxr] = ind2sub([100 100],cind);
+
+mgrmat = mgr(:)*ones(1,size(fmaxr,1));
+fmaxrmat = ones(size(mgrmat,1),1)*fmaxr';
+mgrd = ((mgrmat - fmaxrmat)').^2;
+
+mgcmat = mgc(:)*ones(1,size(fmaxc,1));
+fmaxcmat = ones(size(mgcmat,1),1)*fmaxc';
+mgcd = ((mgcmat - fmaxcmat)').^2;
+
+dp = sqrt(mgrd+mgcd);
+filterMat2 = filterMat;
+filterMat2(dp>30) = 0;
+
+recons_stim_on_off{mosaicInd,1} = reconsFromFiltLen(filterMat2, 1*spikeRespOnOff, numbins);
 
 % % figure; ecdf(filterMat(:));
 % filterMatInd = find(abs(filterMat)<0.0005); filterMat2 = filterMat; filterMat2(filterMatInd)=0;
