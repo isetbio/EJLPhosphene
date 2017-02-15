@@ -31,7 +31,15 @@ for mosaicInd = 1:length(innerRetina.mosaic)
         end
     end
     innerRetinaActivation0{mosaicInd} = innerRetinaActivation;
-    mosaicSet(innerRetina.mosaic{mosaicInd},'responseLinear', innerRetinaActivation-mean(innerRetinaActivation(:)));
+    
+    innerRetinaActivationZM = innerRetinaActivation-mean(innerRetinaActivation(:));
+    
+    % Threshold using ECDF - knock lowest 10% of abs(activations) to zero
+    [fe,xe]=ecdf(abs(innerRetinaActivationZM(:))); % figure; plot(xe,fe)
+    threshECDF = 0.1; % set threshold level
+    threshVal = xe(min(find(fe>threshECDF)));    
+    
+    mosaicSet(innerRetina.mosaic{mosaicInd},'responseLinear', (innerRetinaActivationZM.*innerRetinaActivationZM>threshVal));
     % mosaicSet(innerRetina2.mosaic{mosaicInd},'responseLinear', innerRetinaActivation);
 
 end

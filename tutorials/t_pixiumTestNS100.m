@@ -236,10 +236,14 @@ for rsFactor = 1%[1 2 3 5 6]
                     if imageCoordY2 > size(fullStimulus,1); imageCoordY2 = size(fullStimulus,1); end;
                     % Pull out piece of stimulus and take mean
                     electrodeStimulus = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2,:,:));
-                    electrodeArray.activation(xPos,yPos,:) = mean(RGB2XWFormat(electrodeStimulus));
+                    % electrodeArray.activation(xPos,yPos,:) = mean(RGB2XWFormat(electrodeStimulus));
                     
-                    % sizeES = size(electrodeStimulus);
+                    % Implement the local electrode min([e1,e2]) nonlinearity
+                    sizeES = size(electrodeStimulus);
+                    electrodeStimulusL = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:floor(imageCoordX1+activationWindow/2),:,:));
+                    electrodeStimulusR = squeeze(fullStimulus(imageCoordY1:imageCoordY2,floor(imageCoordX1+activationWindow/2)+1:imageCoordX2,:,:));
                     % electrodeArray.activation(xPos,yPos,frame) = min([ mean(electrodeStimulus(:,1:floor(sizeES(2)/2))) mean(electrodeStimulus(:,ceil(sizeES(2)/2):sizeES(2)))]);                    
+                    electrodeArray.activation(xPos,yPos,:) = min([mean(RGB2XWFormat(electrodeStimulusL)); mean(RGB2XWFormat(electrodeStimulusL))]);                    
                 end
             end
                         
@@ -280,9 +284,9 @@ for rsFactor = 1%[1 2 3 5 6]
             % Weight electrode activation by Gaussian as a function of distance between
             % centers
             offFlag = [0 1 1 0]; nTileRows = 1; nTileCols = 1; mosaicOffset = zeros(4,1);
-            innerRetinaInput = irActivationFromElectrode(innerRetina, electrodeArray, retinalPatchWidth, metersPerPixel, nTileRows, nTileCols, mosaicOffset, params, offFlag);
+%             innerRetinaInput = irActivationFromElectrode(innerRetina, electrodeArray, retinalPatchWidth, metersPerPixel, nTileRows, nTileCols, mosaicOffset, params, offFlag);
             
-            % innerRetinaInput = irActivationFromElectrodeNew(innerRetina, electrodeArray, retinalPatchWidth, metersPerPixel, nTileRows, nTileCols, mosaicOffset, params, offFlag);
+            innerRetinaInput = irActivationFromElectrodeNew(innerRetina, electrodeArray, retinalPatchWidth, metersPerPixel, nTileRows, nTileCols, mosaicOffset, params, offFlag);
             
             %% Build RGC activation functions            
             innerRetinaThreshold = irGetThreshold(innerRetina);

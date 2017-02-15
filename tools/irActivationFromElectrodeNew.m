@@ -4,7 +4,12 @@ numberElectrodesX = floor(retinalPatchWidth/electrodeArray.width)+4;
 numberElectrodesY = floor(retinalPatchWidth/electrodeArray.width)+4;
 numberElectrodes = numberElectrodesX*numberElectrodesY;
 
-innerRetinaInput = zeros([size(innerRetina.mosaic{1}.cellLocation),size(electrodeArray.activationDS,3)]);
+for mi = 1:length(innerRetina.mosaic)
+    szr(mi) = size(innerRetina.mosaic{mi}.cellLocation,1);
+    
+end
+
+innerRetinaInput = zeros([max(szr),max(szr),size(electrodeArray.activationDS,3),length(innerRetina.mosaic)]);
 
 % for frame = 1:params.nSteps
     for mosaicInd = 1:length(innerRetina.mosaic)
