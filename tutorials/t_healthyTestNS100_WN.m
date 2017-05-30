@@ -88,15 +88,15 @@ for rsFactor = 1%[1 2 3 5 6]
     rsFactor
     tic
 %     load('C:\Users\James\Documents\MATLAB\github\EJLPhosphene\dat\stimuli\hallMovie.mat')
-    load([phospheneRootPath '/dat/stimuli/hallMovie.mat'])
-    szFrames = size(vidFrame,3);
-    hallMovieResize = zeros(rsFactor*stimSize,rsFactor*stimSize,szFrames);
-    for ii = 1:szFrames
-        hallMovieResize(:,:,ii) = imresize(vidFrame(:,:,ii),[rsFactor*stimSize,rsFactor*stimSize]);
-    end
+%     load([phospheneRootPath '/dat/stimuli/hallMovie.mat'])
+%     szFrames = size(vidFrame,3);
+%     hallMovieResize = zeros(rsFactor*stimSize,rsFactor*stimSize,szFrames);
+%     for ii = 1:szFrames
+%         hallMovieResize(:,:,ii) = imresize(vidFrame(:,:,ii),[rsFactor*stimSize,rsFactor*stimSize]);
+%     end
     
     % Set hallway movie stimulus
-    testmovieshort = (255*ieScale(hallMovieResize)); clear hallMovieResize;
+    testmovieshort = (255*ieScale(rand(100,100,6000))); clear hallMovieResize;
     
     % Stimulus parameters
     paramsStim.nsteps = 1;%nFrames;%size(testmovieshort,3);
@@ -179,48 +179,48 @@ for rsFactor = 1%[1 2 3 5 6]
             %% Do optimal reconstruction
             
             pOpt.innerRetina = innerRetina;
-            pOpt.percentDead = 0;
-%             pOpt.numbins = 4;
-%             pOpt.filterFile = 'pix1_long_filter_nsBig_100hz_4st';
-%             pOpt.filterFile = 'pixiumBig/pix1_nsBig_100Hz_4st__mosaicAll_772530';
-%             pOpt.filterFile = 'pixiumBig/pix1_nsBig_100Hz_1st_sv125__mosaicAll_772530';
-%             pOpt.filterFile = 'pixium25/pix1_nsBig_100Hz_1st_sv05__mosaicAll_8372855';
-
-
-%             mosaicFile = '_mosaicAll_19261';
-%             mosaicFile = '_mosaicAll_51550348';
-            mosaicFile = '_mosaicAll_1246640';
-%             mosaicFile = '_mosaicAll_20116';
+%             pOpt.percentDead = 0;
+% %             pOpt.numbins = 4;
+% %             pOpt.filterFile = 'pix1_long_filter_nsBig_100hz_4st';
+% %             pOpt.filterFile = 'pixiumBig/pix1_nsBig_100Hz_4st__mosaicAll_772530';
+% %             pOpt.filterFile = 'pixiumBig/pix1_nsBig_100Hz_1st_sv125__mosaicAll_772530';
+% %             pOpt.filterFile = 'pixium25/pix1_nsBig_100Hz_1st_sv05__mosaicAll_8372855';
 % 
-            pOpt.numbins = 1;
-%             filterFile = ['ns100/filters_nsDec22_1st_sv05_' mosaicFile];
-%                 filterFile = ['ns100_r2/filters_ns100_Dec31_1st_sv05_' mosaicFile];
-                
-%             filterFile = ['ns100_r2_10/filters_ns100_jan1_1st_sv20_' mosaicFile];
-%             pOpt.numbins = 2;
-%             filterFile = ['ns200/filters_nsDec22_2st_sv375fig_' mosaicFile];
-
-            pOpt.numbins = 1;
-%             filterFile = ['ns200/filters_nsDec22_4st_sv075_' mosaicFile];
-%             filterFile = ['ns200/filters_nsDec22_4st_sv005_' mosaicFile];
-
-%             filterFile = ['ns100_r2_10/filters_ns1002_jan1_1st3_sv20_' mosaicFile];
-            
-%             filterFile = ['ns100_r2_10/filters_ns100_jan1_1st_sv05_' mosaicFile];
-            
-%             filterFile = ['ns100_r2_10/filters_ns100_jan1_1st_sh9_sv20_' mosaicFile];
-             filterFile = ['ns100_r2_10/filters2_ns100_feb6_sh9_sv40_tr83' mosaicFile];
-            
-%             filterFile = ['ns100_r2_10_regmos/filters_ns100_regmos_1st_sh9_sv30_' mosaicFile];
-%             filterFile = ['ns100/filters_nsDec22_4st_sv05_' mosaicFile];
 % 
-%             pOpt.numbins = 8;
-% % %             filterFile = ['ns200/filters_nsDec22_8st_sv125_' mosaicFile];
-%             filterFile = ['ns200/filters_nsDec22_8st_sv03_' mosaicFile];
-
-            pOpt.filterFile = filterFile;
-            [movrecons_on_offHealthy, movrecons_on_offHealthy_dropout] = irOptimalReconSingle(pOpt);
-            figure; ieMovie(movrecons_on_offHealthy(:,:,1:400));
+% %             mosaicFile = '_mosaicAll_19261';
+% %             mosaicFile = '_mosaicAll_51550348';
+%             mosaicFile = '_mosaicAll_1246640';
+% %             mosaicFile = '_mosaicAll_20116';
+% % 
+%             pOpt.numbins = 1;
+% %             filterFile = ['ns100/filters_nsDec22_1st_sv05_' mosaicFile];
+% %                 filterFile = ['ns100_r2/filters_ns100_Dec31_1st_sv05_' mosaicFile];
+%                 
+% %             filterFile = ['ns100_r2_10/filters_ns100_jan1_1st_sv20_' mosaicFile];
+% %             pOpt.numbins = 2;
+% %             filterFile = ['ns200/filters_nsDec22_2st_sv375fig_' mosaicFile];
+% 
+%             pOpt.numbins = 1;
+% %             filterFile = ['ns200/filters_nsDec22_4st_sv075_' mosaicFile];
+% %             filterFile = ['ns200/filters_nsDec22_4st_sv005_' mosaicFile];
+% 
+% %             filterFile = ['ns100_r2_10/filters_ns1002_jan1_1st3_sv20_' mosaicFile];
+%             
+% %             filterFile = ['ns100_r2_10/filters_ns100_jan1_1st_sv05_' mosaicFile];
+%             
+% %             filterFile = ['ns100_r2_10/filters_ns100_jan1_1st_sh9_sv20_' mosaicFile];
+%              filterFile = ['ns100_r2_10/filters2_ns100_feb6_sh9_sv40_tr83' mosaicFile];
+%             
+% %             filterFile = ['ns100_r2_10_regmos/filters_ns100_regmos_1st_sh9_sv30_' mosaicFile];
+% %             filterFile = ['ns100/filters_nsDec22_4st_sv05_' mosaicFile];
+% % 
+% %             pOpt.numbins = 8;
+% % % %             filterFile = ['ns200/filters_nsDec22_8st_sv125_' mosaicFile];
+% %             filterFile = ['ns200/filters_nsDec22_8st_sv03_' mosaicFile];
+% 
+%             pOpt.filterFile = filterFile;
+%             [movrecons_on_offHealthy, movrecons_on_offHealthy_dropout] = irOptimalReconSingle(pOpt);
+%             figure; ieMovie(movrecons_on_offHealthy(:,:,1:400));
             %% Save for tiling       
             
 %             if ismac || isunix
@@ -268,13 +268,13 @@ for rsFactor = 1%[1 2 3 5 6]
 %         aviobj = avifile([phospheneRootPath '\dat\prosthesis_dec20_recon_' num2str(rsFactor) '_ns.avi'])
 %     end
 %     aviobj.Fps = 30;
-    movieRecon = movrecons_on_offHealthy;
-    shiftval = 9;
-    clear movieComb
-    szLen = 596;
-    movieComb = 255*irradianceFraction*pulseDutyCycle*ieScale(movieRecon(:,:,1:szLen-shiftval+1));
-    movieComb(:,rsFactor*stimSize+[1:rsFactor*stimSize],:) = 255*irradianceFraction*pulseDutyCycle*ieScale(testmovieshort(:,:,shiftval+1:szLen+1));
-    maxc = max(movieComb(:)); minc = min(movieComb(:));
+%     movieRecon = movrecons_on_offHealthy;
+%     shiftval = 9;
+%     clear movieComb
+%     szLen = 596;
+%     movieComb = 255*irradianceFraction*pulseDutyCycle*ieScale(movieRecon(:,:,1:szLen-shiftval+1));
+%     movieComb(:,rsFactor*stimSize+[1:rsFactor*stimSize],:) = 255*irradianceFraction*pulseDutyCycle*ieScale(testmovieshort(:,:,shiftval+1:szLen+1));
+%     maxc = max(movieComb(:)); minc = min(movieComb(:));
 %     for k=1:size(movieRecon,3)-60
 %         % imagesc(movieRecon(:,:,k)); colormap gray;
 %         
@@ -299,12 +299,12 @@ for rsFactor = 1%[1 2 3 5 6]
     
     %%
     
-    mc1 = ieScale(movieRecon(:,:,1:szLen-shiftval+1));
-    mc2 = ieScale(testmovieshort(:,:,shiftval+1:szLen+1));
-    errmov =mc1-mc2;
-    errtot = ((errmov.^2));
-    figure; ieMovie(errmov);
-    figure; subplot(131); imagesc(mc1(:,:,1)); subplot(132); imagesc(mc2(:,:,1)); subplot(133); imagesc(mc1(:,:,1)-mc2(:,:,1));
+%     mc1 = ieScale(movieRecon(:,:,1:szLen-shiftval+1));
+%     mc2 = ieScale(testmovieshort(:,:,shiftval+1:szLen+1));
+%     errmov =mc1-mc2;
+%     errtot = ((errmov.^2));
+%     figure; ieMovie(errmov);
+%     figure; subplot(131); imagesc(mc1(:,:,1)); subplot(132); imagesc(mc2(:,:,1)); subplot(133); imagesc(mc1(:,:,1)-mc2(:,:,1));
     
 %     3: rms = .156, rss = .1981
 %       1: .1596, .202

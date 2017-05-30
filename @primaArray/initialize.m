@@ -98,8 +98,8 @@ set(gca,'fontsize',14);
 % Build the current stimulation activation window
 % Gaussian activation from center of electrode
 % activationWindow = floor(1e6*retinalPatchSize(2)/numberElectrodesX);
-activationWindow = floor(size(movieInput,1)/numberElectrodesX);
-primaArray.spatialWeight = fspecial('Gaussian', activationWindow, activationWindow/8);
+activationWindow = ceil(size(movieInput,1)/numberElectrodesX);
+primaArray.spatialWeight = fspecial('Gaussian', round(1.5*activationWindow), 1.5*activationWindow/3);
 
 % Visualize Gaussian activation
 % figure; imagesc(primaArray.spatialWeight);

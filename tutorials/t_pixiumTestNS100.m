@@ -316,7 +316,14 @@ for rsFactor = 1%[1 2 3 5 6]
 %             pOpt.filterFile = 'pixiumBig/pix1_nsBig_100Hz_1st_sv125__mosaicAll_772530';
 %             pOpt.filterFile = 'pixium25/pix1_nsBig_100Hz_1st_sv05__mosaicAll_8372855';
          
-            pOpt.filterFile = 'pixium15_100/filters_pix1_nsBig15_1st_sv025__mosaicAll_35336498.mat';
+%             pOpt.filterFile = 'pixium15_100/filters_pix1_nsBig15_1st_sv025__mosaicAll_35336498.mat';
+
+            
+            % pOpt.filterFile =
+            % 'pixium15_sm/pix15_1st_sh0_sv01__mosaicAll_35336498.mat'; % feb 6
+            mosaicFile = '_mosaicAll_35336498';
+            filterFile = ['pixium15_sm/filters_pix_feb21_sh0_sv' sprintf('%2d',100*evArr(evInd)) '_tr' sprintf('%2d',100*trainFraction(trainFractionInd))  mosaicFile];
+
             [movrecons_on_offHealthy, movrecons_on_offHealthy_dropout] = irOptimalReconSingle(pOpt);
             vParams.fps = 30;
             figure; ieMovie(movrecons_on_offHealthy, vParams);

@@ -115,8 +115,8 @@ for rsFactor = 1%[1 2 3 5 6]
     tic
     
     %% Loop over each tiled mosaic
-    for iblock = 1:rsFactor
-        for jblock = 1:rsFactor
+    iblock = 1;
+        jblock = 1;
             
             % Get iStim structure with os object with desired properties
             blockctr = blockctr+1;
@@ -149,13 +149,15 @@ for rsFactor = 1%[1 2 3 5 6]
             timeStep = sensorGet(movingBar.absorptions,'time interval','sec');
             os = osSet(os, 'timeStep', timeStep);
             
-            movingBar.sceneRGB = testmovieshort((iblock-1)*stimSize+[1:stimSize],(jblock-1)*stimSize+[1:stimSize],:)
+            % movingBar.sceneRGB = testmovieshort((iblock-1)*stimSize+[1:stimSize],(jblock-1)*stimSize+[1:stimSize],:)
             % movingBar.sceneRGB = (contrastElectrode)*(movingBar.sceneRGB - 0.5)+0.5;
-            os = osSet(os, 'rgbData', movingBar.sceneRGB);
-            
-            sceneRGB_Healthy = (1)*(movingBar.sceneRGB - 0.5)+0.5;
-            osHealthy = os;
-            osHealthy = osSet(osHealthy, 'rgbData', sceneRGB_Healthy);            
+%             
+%             movingBar.sceneRGB = repmat(imgLandoltC,[1 1 7]);
+%             os = osSet(os, 'rgbData', movingBar.sceneRGB);
+%             
+%             sceneRGB_Healthy = (1)*(movingBar.sceneRGB - 0.5)+0.5;
+%             osHealthy = os;
+%             osHealthy = osSet(osHealthy, 'rgbData', sceneRGB_Healthy);            
             
         
             %% Build RGC array for healthy retina            
@@ -171,11 +173,28 @@ for rsFactor = 1%[1 2 3 5 6]
             else
 %                 load([phospheneRootPath '\dat\mosaicAll_pix_ns.mat'])
             end
+%%
+            tic
+            orient0 = 'down';
+%     for expRep = 1:500;
+        cFrames = 7;
+%         expRep
+            movingBar.sceneRGB = repmat(imgLandoltC('orientation',orient0),[1 1 cFrames]);
+%             os = osSet(os, 'rgbData', movingBar.sceneRGB);
 
+        contarr = [.01 .025 .05 .005];
+        
+        for contind = 1:length(contarr)
 
+            sceneRGB_Healthy = (contarr(contind))*(movingBar.sceneRGB - 0.5);%+0.5;
+            osHealthy = os;
+            osHealthy = osSet(osHealthy, 'rgbData', sceneRGB_Healthy); 
+    for expRep = 1:500;
+        cFrames = 7;
+        expRep
             innerRetina = irCompute(innerRetina,osHealthy,'coupling',false);
            
-            toc
+%             toc
             %% Do optimal reconstruction
             
             pOpt.innerRetina = innerRetina;
@@ -220,7 +239,8 @@ for rsFactor = 1%[1 2 3 5 6]
 
             pOpt.filterFile = filterFile;
             [movrecons_on_offHealthy, movrecons_on_offHealthy_dropout] = irOptimalReconSingle(pOpt);
-            figure; ieMovie(movrecons_on_offHealthy(:,:,1:400));
+%             figure; ieMovie(movrecons_on_offHealthy);
+            movrecons_on_offHealthy = movrecons_on_offHealthy(:,:,1:cFrames);
             %% Save for tiling       
             
 %             if ismac || isunix
@@ -229,8 +249,19 @@ for rsFactor = 1%[1 2 3 5 6]
 %                 save([phospheneRootPath '\dat\ns_dec5_rs_' num2str(rsFactor) '_block' num2str(blockctr) '.mat'], 'innerRetina','movrecons_on_offHealthy');
 %             end
             toc
-        end
+            
+            framesOut(:,:,expRep) = movrecons_on_offHealthy(:,:,1);
+            
+%             if expRep == 250
+%                  save(['dat/framesOutLong' orient0 '_250_c075_418.mat'],'framesOut');
+%             end
+                
     end
+    toc
+    save(['dat/framesOutLong' orient0 '_c0' num2str(1000*contarr(contind)) '_420.mat'],'framesOut');
+        end
+        toc
+    
     
     %% Tile reconstructed movies 
     szLen = size(movrecons_on_offHealthy,3);
@@ -268,13 +299,13 @@ for rsFactor = 1%[1 2 3 5 6]
 %         aviobj = avifile([phospheneRootPath '\dat\prosthesis_dec20_recon_' num2str(rsFactor) '_ns.avi'])
 %     end
 %     aviobj.Fps = 30;
-    movieRecon = movrecons_on_offHealthy;
-    shiftval = 9;
-    clear movieComb
-    szLen = 596;
-    movieComb = 255*irradianceFraction*pulseDutyCycle*ieScale(movieRecon(:,:,1:szLen-shiftval+1));
-    movieComb(:,rsFactor*stimSize+[1:rsFactor*stimSize],:) = 255*irradianceFraction*pulseDutyCycle*ieScale(testmovieshort(:,:,shiftval+1:szLen+1));
-    maxc = max(movieComb(:)); minc = min(movieComb(:));
+% % %     movieRecon = movrecons_on_offHealthy;
+% % %     shiftval = 9;
+% % %     clear movieComb
+% % %     szLen = 596;
+% % %     movieComb = 255*irradianceFraction*pulseDutyCycle*ieScale(movieRecon(:,:,1:szLen-shiftval+1));
+% % %     movieComb(:,rsFactor*stimSize+[1:rsFactor*stimSize],:) = 255*irradianceFraction*pulseDutyCycle*ieScale(testmovieshort(:,:,shiftval+1:szLen+1));
+% % %     maxc = max(movieComb(:)); minc = min(movieComb(:));
 %     for k=1:size(movieRecon,3)-60
 %         % imagesc(movieRecon(:,:,k)); colormap gray;
 %         
@@ -299,12 +330,12 @@ for rsFactor = 1%[1 2 3 5 6]
     
     %%
     
-    mc1 = ieScale(movieRecon(:,:,1:szLen-shiftval+1));
-    mc2 = ieScale(testmovieshort(:,:,shiftval+1:szLen+1));
-    errmov =mc1-mc2;
-    errtot = ((errmov.^2));
-    figure; ieMovie(errmov);
-    figure; subplot(131); imagesc(mc1(:,:,1)); subplot(132); imagesc(mc2(:,:,1)); subplot(133); imagesc(mc1(:,:,1)-mc2(:,:,1));
+%     mc1 = ieScale(movieRecon(:,:,1:szLen-shiftval+1));
+%     mc2 = ieScale(testmovieshort(:,:,shiftval+1:szLen+1));
+%     errmov =mc1-mc2;
+%     errtot = ((errmov.^2));
+%     figure; ieMovie(errmov);
+%     figure; subplot(131); imagesc(mc1(:,:,1)); subplot(132); imagesc(mc2(:,:,1)); subplot(133); imagesc(mc1(:,:,1)-mc2(:,:,1));
     
 %     3: rms = .156, rss = .1981
 %       1: .1596, .202

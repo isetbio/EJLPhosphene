@@ -28,10 +28,10 @@ for ii = 1:szFrames
 end
 
 % movieIn = rand(100,100,10);
-movieIn = hallMovieResize(:,:,1:250);
+movieIn = hallMovieResize(:,:,1:5);
 %%
 
-primaParams.pixelWidth = 1*35e-6; % meters
+primaParams.pixelWidth = .5*35e-6; % meters
 primaParams.ecc = 1.8;       % mm
 primaParams.fov = 1.7/1;     % deg
 

@@ -28,7 +28,7 @@ numberElectrodesX = floor(primaArray.width/primaArray.pixelWidth)+4;
 numberElectrodesY = floor(primaArray.width/primaArray.pixelWidth)+4;
 numberElectrodes = numberElectrodesX*numberElectrodesY;
 
-activationWindow = floor(size(movieInput,1)/numberElectrodesX);
+activationWindow = ceil(size(movieInput,1)/numberElectrodesX);
 %% Compute electrode activations from image
 
 % Get the full image/movie from the identity outersegment
@@ -45,7 +45,13 @@ for xPos = 1:numberElectrodesX
         imageCoordY1 = (activationWindow)*(yPos-1)+1;
         imageCoordY2 = (activationWindow)*(yPos);
         
-        if imageCoordX2 > size(fullStimulus,2); imageCoordY2 = size(fullStimulus,2); end;
+        
+        if imageCoordX1 < 1; imageCoordX1 = 1; end;
+        if imageCoordY1 < 1; imageCoordY1 = 1; end;
+        
+        if imageCoordX1 > size(fullStimulus,2); imageCoordX1 = size(fullStimulus,2); end;
+        if imageCoordY1 > size(fullStimulus,1); imageCoordY1 = size(fullStimulus,1); end;
+        if imageCoordX2 > size(fullStimulus,2); imageCoordX2 = size(fullStimulus,2); end;
         if imageCoordY2 > size(fullStimulus,1); imageCoordY2 = size(fullStimulus,1); end;
         % Pull out piece of stimulus and take mean
         electrodeStimulus = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2,:,:));
@@ -53,10 +59,20 @@ for xPos = 1:numberElectrodesX
         
         % Implement the local electrode min([e1,e2]) nonlinearity
         sizeES = size(electrodeStimulus);
+        if imageCoordX1 < (size(fullStimulus,2)-activationWindow/2)
         electrodeStimulusL = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:floor(imageCoordX1+activationWindow/2),:,:));
         electrodeStimulusR = squeeze(fullStimulus(imageCoordY1:imageCoordY2,floor(imageCoordX1+activationWindow/2)+1:imageCoordX2,:,:));
         % primaArray.activation(xPos,yPos,frame) = min([ mean(electrodeStimulus(:,1:floor(sizeES(2)/2))) mean(electrodeStimulus(:,ceil(sizeES(2)/2):sizeES(2)))]);
         primaArray.activation(xPos,yPos,:) = min([mean(RGB2XWFormat(electrodeStimulusL)); mean(RGB2XWFormat(electrodeStimulusL))]);
+        
+        else
+            
+            
+        electrodeStimulusL = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:floor(imageCoordX2),:,:));
+        electrodeStimulusR = squeeze(fullStimulus(imageCoordY1:imageCoordY2,floor(imageCoordX1)+1:imageCoordX2,:,:));
+        % primaArray.activation(xPos,yPos,frame) = min([ mean(electrodeStimulus(:,1:floor(sizeES(2)/2))) mean(electrodeStimulus(:,ceil(sizeES(2)/2):sizeES(2)))]);
+        primaArray.activation(xPos,yPos,:) = min([mean(RGB2XWFormat(electrodeStimulusL)); mean(RGB2XWFormat(electrodeStimulusL))]);
+        end
     end
 end
 
@@ -119,12 +135,12 @@ rgcParams.ellipseParams = [1 1 0];  % Principle, minor and theta
 
 rgcParams.type = cellType{1};
 innerRetina.mosaicCreate(rgcParams);
-% rgcParams.type = cellType{2};
-% innerRetina.mosaicCreate(rgcParams);
-% rgcParams.type = cellType{3};
-% innerRetina.mosaicCreate(rgcParams);
-% rgcParams.type = cellType{4};
-% innerRetina.mosaicCreate(rgcParams);
+rgcParams.type = cellType{2};
+innerRetina.mosaicCreate(rgcParams);
+rgcParams.type = cellType{3};
+innerRetina.mosaicCreate(rgcParams);
+rgcParams.type = cellType{4};
+innerRetina.mosaicCreate(rgcParams);
 % 
 % for mosaicInd = 1:length(innerRetina.mosaic)
 %     for ri = 1:size((innerRetina.mosaic{mosaicInd}.cellLocation),1);

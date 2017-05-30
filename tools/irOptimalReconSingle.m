@@ -1,4 +1,4 @@
-function [movrecons_on_off_full, movrecons_on_off_dropout] = irOptimalReconSingle(varargin)
+function [movrecons_on_off_full, movrecons_on_off_dropout, spikeRespOnOff] = irOptimalReconSingle(varargin)
 % Converts an RGC mosaic spike train to a reconstructed movie.
 % 
 % testReconAll loads an RGC mosaic as well as a movie input and computes 
@@ -30,23 +30,24 @@ y = cell(length(innerRetina.mosaic));
 dt = innerRetina.mosaic{1}.dt;
 
 % Loop over the mosaic objects
-for mosaicInd = 1:length(innerRetina.mosaic)
-    
-    cellCtr=0; 
-    maxTrials = innerRetina.mosaic{1}.numberTrials;
-    nCells = size(innerRetina.mosaic{mosaicInd}.responseSpikes);
-    
-    y{mosaicInd} = zeros(nCells(1)*nCells(2),10000);
-    
-    for ycell = 1:nCells(1)        
-        for xcell = 1:nCells(2)
-            cellCtr = cellCtr+1;            
-            for trial = 1%:maxTrials                
-                yind =  innerRetina.mosaic{mosaicInd}.responseSpikes{xcell,ycell,trial,1};                
-                y{mosaicInd}(cellCtr,ceil(yind./dt))=1;                
+
+maxTrials = innerRetina.numberTrials;
+for trial = 1:maxTrials
+    for mosaicInd = 1:length(innerRetina.mosaic)
+        
+        cellCtr=0;
+        nCells = size(innerRetina.mosaic{mosaicInd}.responseSpikes);
+        
+        y{mosaicInd} = zeros(nCells(1)*nCells(2),10000);
+        
+        for ycell = 1:nCells(1)
+            for xcell = 1:nCells(2)
+                cellCtr = cellCtr+1;
+                yind =  innerRetina.mosaic{mosaicInd}.responseSpikes{xcell,ycell,trial,1};
+                y{mosaicInd}(cellCtr,ceil(yind./dt))=y{mosaicInd}(cellCtr,ceil(yind./dt))+1;
             end
         end
-    end    
+    end
 end
 
 
