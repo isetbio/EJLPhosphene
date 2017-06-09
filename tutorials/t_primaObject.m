@@ -29,7 +29,7 @@ clear vidFrame hallMovieResize
 
 %% Simulate bipolar and RGC response to prosthesis stimulation
 
-primaParams.pixelWidth = .5*35e-6; % meters
+primaParams.pixelWidth = 1*35e-6; % meters
 primaParams.ecc = 1.8;       % mm
 primaParams.fov = 1.7/1;     % deg
 
