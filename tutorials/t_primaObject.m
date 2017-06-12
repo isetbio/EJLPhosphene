@@ -23,7 +23,7 @@ for ii = 1:szFrames
 end
 
 % movieIn = rand(100,100,10);
-movieIn = hallMovieResize(:,:,1:600);
+movieIn = hallMovieResize(:,:,1:100);
 
 clear vidFrame hallMovieResize
 

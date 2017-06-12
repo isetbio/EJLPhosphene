@@ -78,17 +78,18 @@ for xPos = 1:numberElectrodesX
 end
 
 th = (0:1/6:1)'*2*pi;
-xh = primaArray.pixelWidth/2*cos(th);
-yh = primaArray.pixelWidth/2*sin(th);
+scaleFactor = 1e6;
+xh = scaleFactor*primaArray.pixelWidth/2*cos(th);
+yh = scaleFactor*primaArray.pixelWidth/2*sin(th);
 
 % % Plot electrode array
 eaSize = size(primaArray.center);
-figure;
+% figure;
 hold on;
 for i = 1:eaSize(1)
     for j = 1:eaSize(2)
         %         scatter(primaArray.center(i,j,1),primaArray.center(i,j,2));
-        plot(xh+primaArray.center(i,j,1),yh+primaArray.center(i,j,2),'r')
+        plot(xh+scaleFactor*primaArray.center(i,j,1),yh+scaleFactor*primaArray.center(i,j,2),'r')
     end
 end
 axis equal

@@ -93,12 +93,23 @@ eaRS = reshape(primaArray.activation,[szAct(1)*szAct(2),szAct(3)]);
 eaDSRS = reshape(primaArray.activationDS,[szAct(1)*szAct(2),szAct(3)]);
 
 %% Bipolar
+% The general strategy is to take our electrode activations, which will be
+% a relatively coarse grid, and set their activations into the current
+% field of the cone mosaic. The bipolar responses to the electrode
+% activations are then calculated at this low spatial resolution to save
+% processing time. Then the electrode activations are scaled up to the full
+% size of the bipolar mosaic.
+
 clear bpMosaic
 
 
+coneSize = size(cMosaicNS.pattern);
+
 % Hack cone mosaic
 cMosaicNS.pattern = 3*ones(size(primaArray.activationDS,1),size(primaArray.activationDS,2));
-cMosaicNS.current = primaArray.activationDS;
+% cMosaicNS.current = primaArray.activationDS;
+
+
 
 cellType = {'ondiffuse','offdiffuse','onmidget','offmidget','onSBC'};
 for cellTypeInd = 1:4
@@ -113,11 +124,67 @@ for cellTypeInd = 1:4
     switch cellType{cellTypeInd}
         case {'ondiffuse','onparasol','onmidget'}            
             cMosaicNS.current = 1*primaArray.activationDS;
+%             for fr = 1:size(primaArray.activationDS,3)
+%                 cMosaicNS.current = [];
+%                 cMosaicNS.current(:,:,fr) = imresize(primaArray.activationDS(:,:,fr),[coneSize],'method','nearest');
+%             end
         otherwise
             cMosaicNS.current = 1*primaArray.activationDSoff;
+%             for fr = 1:size(primaArray.activationDS,3)
+%                 cMosaicNS.current(:,:,fr) = imresize(primaArray.activationDSoff(:,:,fr),[coneSize]);
+%             end
     end
     
     bpMosaic{cellTypeInd}.compute(cMosaicNS);
+    bpResponseCenterTemp = bpMosaic{cellTypeInd}.responseCenter;
+    bpResponseSurroundTemp = bpMosaic{cellTypeInd}.responseSurround;
+        
+    
+    cMosaicNS.pattern = 3*ones([coneSize]);
+    cMosaicNS.current = [];
+    cMosaicNS.current(:,:,1) = imresize(primaArray.activationDS(:,:,1),[coneSize],'method','nearest');
+            
+    bpMosaic{cellTypeInd} = bipolar(cMosaicNS, bpParams);
+    
+    bpMosaic{cellTypeInd}.set('sRFcenter',1);
+    bpMosaic{cellTypeInd}.set('sRFsurround',0);
+    
+%     for fr = 1:size(primaArray.activationDS,3)
+%          responseCenterRS(:,:,fr) = imresize(bpResponseCenterTemp(:,:,fr),[coneSize],'method','nearest');
+%          responseSurroundRS(:,:,fr) = imresize(bpResponseSurroundTemp(:,:,fr),[coneSize],'method','nearest');
+%     end
+    
+    scaleFactor = 1e6 * .5;
+    electrodeStimCenter = zeros(coneSize(1),coneSize(2),size(primaArray.activationDS,3));
+    electrodeStimSurround = zeros(coneSize(1),coneSize(2),size(primaArray.activationDS,3));
+    centerOffset = [primaArray.height primaArray.width]/2;    
+    
+    activationWindow = ceil([coneSize(1),coneSize(2)]/numberElectrodesX);
+    primaArray.spatialWeight = fspecial('Gaussian', round(1.25*activationWindow(1)), activationWindow(1)/3);
+    primaArray.spatialWeight = primaArray.spatialWeight./max(primaArray.spatialWeight(:));
+    szWeight = size(primaArray.spatialWeight);
+    for ri = 3:size(primaArray.center,1)-2
+        for ci = 3:size(primaArray.center,2)-2            
+            
+            centerCoords = scaleFactor*(centerOffset+[primaArray.center(ri,ci,1),primaArray.center(ri,ci,2)]);        
+            rc = [ceil(-szWeight(1)/2+centerCoords(1)) : floor(szWeight(1)/2+centerCoords(1))]; 
+            rc = rc(find(rc>0));
+            rc = rc(find(rc<coneSize(1)));
+            cc = [ceil(-szWeight(2)/2+centerCoords(2)) : floor(szWeight(2)/2+centerCoords(2))]; 
+            cc = cc(find(cc>0));
+            cc = cc(find(cc<coneSize(2)));
+%             electrodeStimMask(rc,cc) =  ...
+%                 0*electrodeStimMask(rc,cc) + primaArray.spatialWeight(1:length(rc),1:length(cc));
+            weightRS = primaArray.spatialWeight(1:length(rc),1:length(cc));
+            electrodeStimCenter(rc,cc,:) = XW2RGBFormat(weightRS(:)*squeeze(bpResponseCenterTemp(ri,ci,:))',length(rc), length(cc));            
+            electrodeStimSurround(rc,cc,:) = XW2RGBFormat(weightRS(:)*squeeze(bpResponseSurroundTemp(ri,ci,:))',length(rc), length(cc));            
+            
+        end
+    end
+%     figure; imagesc(electrodeStimMask(:,:,10))
+    
+    bpMosaic{cellTypeInd}.set('responseCenter',electrodeStimCenter);
+    bpMosaic{cellTypeInd}.set('responseSurround',electrodeStimSurround);
 end
 
 primaArray.bpMosaic = bpMosaic;
