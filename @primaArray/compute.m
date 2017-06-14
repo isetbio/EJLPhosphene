@@ -24,8 +24,8 @@ cMosaicNS = iStimNS.cMosaic;
 
 
 
-numberElectrodesX = floor(primaArray.width/primaArray.pixelWidth)+4;
-numberElectrodesY = floor(primaArray.width/primaArray.pixelWidth)+4;
+numberElectrodesX = floor(primaArray.width/primaArray.pixelWidth)+1;
+numberElectrodesY = floor(primaArray.width/primaArray.pixelWidth)+1;
 numberElectrodes = numberElectrodesX*numberElectrodesY;
 
 activationWindow = ceil(size(movieInput,1)/numberElectrodesX);
@@ -35,8 +35,14 @@ activationWindow = ceil(size(movieInput,1)/numberElectrodesX);
 fullStimulus = movieInput;
 
 % Find electrode activations by taking mean within window
+% imElec = zeros(100,100);
+
+electrodeAtten = fspecial('Gaussian', round(activationWindow(1)), activationWindow(1)/2);
+electrodeAtten = electrodeAtten./max(electrodeAtten(:));
+electrodeAttenTemporal = repmat(electrodeAtten,[1 1 size(fullStimulus,3)]);
 for xPos = 1:numberElectrodesX
     for yPos = 1:numberElectrodesY
+%         [xPos yPos]
         % Xcoords of window for stimulus
         imageCoordX1 = (activationWindow)*(xPos-1)+1;
         imageCoordX2 = (activationWindow)*(xPos);
@@ -55,27 +61,38 @@ for xPos = 1:numberElectrodesX
         if imageCoordY2 > size(fullStimulus,1); imageCoordY2 = size(fullStimulus,1); end;
         % Pull out piece of stimulus and take mean
         electrodeStimulus = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2,:,:));
-        % primaArray.activation(xPos,yPos,:) = mean(RGB2XWFormat(electrodeStimulus));
+        % primaArray.activation(xPos,yPos,:) = mean(RGB2XWFormat(electrodeStimulus));                
         
         % Implement the local electrode min([e1,e2]) nonlinearity
         sizeES = size(electrodeStimulus);
         if imageCoordX1 < (size(fullStimulus,2)-activationWindow/2)
-        electrodeStimulusL = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:floor(imageCoordX1+activationWindow/2),:,:));
-        electrodeStimulusR = squeeze(fullStimulus(imageCoordY1:imageCoordY2,floor(imageCoordX1+activationWindow/2)+1:imageCoordX2,:,:));
-        % primaArray.activation(xPos,yPos,frame) = min([ mean(electrodeStimulus(:,1:floor(sizeES(2)/2))) mean(electrodeStimulus(:,ceil(sizeES(2)/2):sizeES(2)))]);
-        primaArray.activation(xPos,yPos,:) = min([mean(RGB2XWFormat(electrodeStimulusL)); mean(RGB2XWFormat(electrodeStimulusL))]);
-        
+            electrodeAttenL = electrodeAttenTemporal(1:length(imageCoordY1:imageCoordY2), 1:length(imageCoordX1:floor(imageCoordX1+activationWindow/2)),:);
+            electrodeAttenR = electrodeAttenTemporal(1:length(imageCoordY1:imageCoordY2),end-length(floor(imageCoordX1+activationWindow/2)+1:imageCoordX2)+1:end,:);
+            
+            electrodeStimulusL = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:floor(imageCoordX1+activationWindow/2),:,:));
+            electrodeStimulusR = squeeze(fullStimulus(imageCoordY1:imageCoordY2,floor(imageCoordX1+activationWindow/2)+1:imageCoordX2,:,:));
+            % primaArray.activation(xPos,yPos,frame) = min([ mean(electrodeStimulus(:,1:floor(sizeES(2)/2))) mean(electrodeStimulus(:,ceil(sizeES(2)/2):sizeES(2)))]);
+            primaArray.activation(xPos,yPos,:) = min([mean(RGB2XWFormat(electrodeAttenL.*electrodeStimulusL)); mean(RGB2XWFormat(electrodeAttenR.*electrodeStimulusR))]);
+            
+            %         imElec(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2) = (xPos*yPos)*ones(size(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2)));
         else
             
+            electrodeAttenL = electrodeAttenTemporal(1:length(imageCoordY1:imageCoordY2), 1:length(imageCoordX1:floor(imageCoordX2)),:);
+            electrodeAttenR = electrodeAttenTemporal(1:length(imageCoordY1:imageCoordY2),end-length(floor(imageCoordX1)+1:imageCoordX2)+1:end,:);
+  
+            electrodeStimulusL = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:floor(imageCoordX2),:,:));
+            electrodeStimulusRsq = squeeze(fullStimulus(imageCoordY1:imageCoordY2,floor(imageCoordX1)+1:imageCoordX2,:,:)); 
+            szESR = size(((electrodeStimulusRsq)));
+            electrodeStimulusR = zeros(szESR(1),1,szESR(2));
+            electrodeStimulusR(1:szESR(1),:,1:szESR(2)) = electrodeStimulusRsq;
+            % primaArray.activation(xPos,yPos,frame) = min([ mean(electrodeStimulus(:,1:floor(sizeES(2)/2))) mean(electrodeStimulus(:,ceil(sizeES(2)/2):sizeES(2)))]);
+            primaArray.activation(xPos,yPos,:) = min([mean(RGB2XWFormat(electrodeAttenL.*electrodeStimulusL)); mean(RGB2XWFormat(electrodeAttenR.*electrodeStimulusR))]);
             
-        electrodeStimulusL = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:floor(imageCoordX2),:,:));
-        electrodeStimulusR = squeeze(fullStimulus(imageCoordY1:imageCoordY2,floor(imageCoordX1)+1:imageCoordX2,:,:));
-        % primaArray.activation(xPos,yPos,frame) = min([ mean(electrodeStimulus(:,1:floor(sizeES(2)/2))) mean(electrodeStimulus(:,ceil(sizeES(2)/2):sizeES(2)))]);
-        primaArray.activation(xPos,yPos,:) = min([mean(RGB2XWFormat(electrodeStimulusL)); mean(RGB2XWFormat(electrodeStimulusL))]);
+            %         imElec(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2) = (xPos*yPos)*ones(size(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2)));
         end
     end
 end
-
+% figure; imagesc(imElec);
 %% Add X Hz spiking of stimulus
 % primaArray.pulseFreq = pulseFreq;
 % Right now the electrode sampling is at 0.01 s = 100 Hz
@@ -104,7 +121,7 @@ clear bpMosaic
 
 
 coneSize = size(cMosaicNS.pattern);
-
+patchSizeMicrons = [cMosaicNS.height cMosaicNS.width];
 % Hack cone mosaic
 cMosaicNS.pattern = 3*ones(size(primaArray.activationDS,1),size(primaArray.activationDS,2));
 % cMosaicNS.current = primaArray.activationDS;
@@ -149,35 +166,33 @@ for cellTypeInd = 1:4
     bpMosaic{cellTypeInd}.set('sRFcenter',1);
     bpMosaic{cellTypeInd}.set('sRFsurround',0);
     
-%     for fr = 1:size(primaArray.activationDS,3)
-%          responseCenterRS(:,:,fr) = imresize(bpResponseCenterTemp(:,:,fr),[coneSize],'method','nearest');
-%          responseSurroundRS(:,:,fr) = imresize(bpResponseSurroundTemp(:,:,fr),[coneSize],'method','nearest');
-%     end
-    
-    scaleFactor = 1e6 * .5;
+   
+    bpSize = size(bpMosaic{cellTypeInd}.cellLocation);
+    bipolarsPerMicron = bpSize(1)./(1e6*patchSizeMicrons(1));
+
+    scaleFactor = 1e6 * bipolarsPerMicron *.98;
     electrodeStimCenter = zeros(coneSize(1),coneSize(2),size(primaArray.activationDS,3));
     electrodeStimSurround = zeros(coneSize(1),coneSize(2),size(primaArray.activationDS,3));
     centerOffset = [primaArray.height primaArray.width]/2;    
+%     centerOffset = [2*primaArray.pixelWidth+primaArray.center(end,end,1)-primaArray.center(1,1,1) 2*primaArray.pixelWidth+primaArray.center(end,end,2)-primaArray.center(1,1,2)]/2;    
     
     activationWindow = ceil([coneSize(1),coneSize(2)]/numberElectrodesX);
-    primaArray.spatialWeight = fspecial('Gaussian', round(1.25*activationWindow(1)), activationWindow(1)/3);
+    primaArray.spatialWeight = fspecial('Gaussian', round(1.25*activationWindow(1)), activationWindow(1)/2);
     primaArray.spatialWeight = primaArray.spatialWeight./max(primaArray.spatialWeight(:));
     szWeight = size(primaArray.spatialWeight);
-    for ri = 3:size(primaArray.center,1)-2
-        for ci = 3:size(primaArray.center,2)-2            
+    for ri = 1:size(primaArray.center,1)-0
+        for ci = 1:size(primaArray.center,2)-0            
             
             centerCoords = scaleFactor*(centerOffset+[primaArray.center(ri,ci,1),primaArray.center(ri,ci,2)]);        
             rc = [ceil(-szWeight(1)/2+centerCoords(1)) : floor(szWeight(1)/2+centerCoords(1))]; 
-            rc = rc(find(rc>0));
-            rc = rc(find(rc<coneSize(1)));
+            rcind1 = find(rc>0); rcind2 = find(rc<coneSize(1)); rcind =intersect(rcind1,rcind2); rc = rc(rcind);
             cc = [ceil(-szWeight(2)/2+centerCoords(2)) : floor(szWeight(2)/2+centerCoords(2))]; 
-            cc = cc(find(cc>0));
-            cc = cc(find(cc<coneSize(2)));
-%             electrodeStimMask(rc,cc) =  ...
-%                 0*electrodeStimMask(rc,cc) + primaArray.spatialWeight(1:length(rc),1:length(cc));
-            weightRS = primaArray.spatialWeight(1:length(rc),1:length(cc));
-            electrodeStimCenter(rc,cc,:) = XW2RGBFormat(weightRS(:)*squeeze(bpResponseCenterTemp(ri,ci,:))',length(rc), length(cc));            
-            electrodeStimSurround(rc,cc,:) = XW2RGBFormat(weightRS(:)*squeeze(bpResponseSurroundTemp(ri,ci,:))',length(rc), length(cc));            
+            ccind1 = find(cc>0); ccind2 = find(cc<coneSize(1)); ccind =intersect(ccind1,ccind2); ccind =intersect(ccind1,ccind2); cc = cc(ccind);
+           weightRS = primaArray.spatialWeight(rcind,ccind);
+%             electrodeStimCenter(rc,cc,:) = XW2RGBFormat(weightRS(:)*squeeze(bpResponseCenterTemp(ri,ci,:))',length(rc), length(cc));            
+%             electrodeStimSurround(rc,cc,:) = XW2RGBFormat(weightRS(:)*squeeze(bpResponseSurroundTemp(ri,ci,:))',length(rc), length(cc));      
+            electrodeStimCenter(rc,cc,:) = electrodeStimCenter(rc,cc,:)+ XW2RGBFormat(weightRS(:)*squeeze(bpResponseCenterTemp(ri,ci,:))',length(rc), length(cc));            
+            electrodeStimSurround(rc,cc,:) = electrodeStimSurround(rc,cc,:) + XW2RGBFormat(weightRS(:)*squeeze(bpResponseSurroundTemp(ri,ci,:))',length(rc), length(cc));         
             
         end
     end
@@ -219,7 +234,7 @@ innerRetina.mosaicCreate(rgcParams);
 %     innerRetina.mosaic{mosaicInd}.set('sRFcenter', sRFcenterNew);
 %     innerRetina.mosaic{mosaicInd}.set('sRFsurround', sRFsurroundNew);
 % end
-scaleFactor = 24;
+scaleFactor = 1;
 innerRetina = scaleRF(innerRetina, scaleFactor);
 
 innerRetina.compute(bpMosaic);

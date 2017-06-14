@@ -55,8 +55,8 @@ retinalPatchWidth = cMosaicNS.width;
 % Electrode array properties
 metersPerPixel = retinalPatchWidth/retinalPatchSize(2);
 
-numberElectrodesX = floor(retinalPatchWidth/primaArray.pixelWidth)+4;
-numberElectrodesY = floor(retinalPatchWidth/primaArray.pixelWidth)+4;
+numberElectrodesX = floor(retinalPatchWidth/primaArray.pixelWidth)+1;
+numberElectrodesY = floor(retinalPatchWidth/primaArray.pixelWidth)+1;
 numberElectrodes = numberElectrodesX*numberElectrodesY;
 
 
