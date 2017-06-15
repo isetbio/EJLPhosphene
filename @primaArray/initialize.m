@@ -1,15 +1,46 @@
 function initialize(primaArray, movieInput, varargin)
 %INITIALIZE - a function of primaArray for initializing the object.
+% 
+%   primaRecon = primaArray(movieIn,primaParams);
+% 
+% This function generates the primaArray object. The general approach is to
+% simulate the electrode array, the bipolar layer and the rgc layer. Since
+% we are simulating a subretinal prosthesis, we assume the cone
+% photoreceptors are not functional. However, we create a dummy cone mosaic
+% that is only used to simulate a retinal patch and to build the bipolar
+% layer. The response of the cone mosaic to the stimulus is not computed.
+% 
+% The general outline of the initiailization is:
+%   - Get input movie
+%   - Build dummy cone mosaic to get retinal properties at ecc and fov
+%   - Bulid the prima electrode array with properties from dummy cone mosaic
+%   - Build the bipolar layer
+%   - Build the rgc layer
+% 
+% Required paramters are:
+%   - movieInput: the movie stimulus, MxNxK matrix
+% 
+% Optional parameters that may be set include:
+%   - bpFile: a saved bipolar layer (in case trained recon filters had irregular mosaic)
+%   - mosaicFile: a saved rgc layer (in case trained recon filters had irregular mosaic)
+%   - fov: field of view in degrees
+%   - pixelWidth: the pitch between pixels in the electrod array (microns)
+%   - height: height of array
+%   - width: width of array
+%   - ecc: eccentricity of retinal patch (degrees)
+%   - pulseFreq: the pulse rate of the electrode array (Hz)
+% 
+% 
+% 5/2017 JRG (c) isetbio team
 
-
-%%
+%% Input parser
 
 p = inputParser;
 addRequired(p, 'movieInput');
 addParameter(p,  'bpFile','',@ischar);
 addParameter(p,  'mosaicFile','',@ischar);
 addParameter(p,  'fov',0,@isscalar);
-addParameter(p,  'pixelWidth',0,@isscalar);
+addParameter(p,  'pixelWidth',70,@isscalar);
 addParameter(p,  'height',0,@isscalar);
 addParameter(p,  'width',0,@isscalar);
 addParameter(p,  'ecc',0,@isscalar);
@@ -28,33 +59,37 @@ pulseFreq   = p.Results.pulseFreq;
 ecc         = p.Results.ecc;
 
 %% Cone Mosaic
-% Generate the cone mosaic for retinal properties
-% The absorptions and photocurrent will not be used
+% Generate the dummy cone mosaic to get the properties of the retinal patch
+% (size, etc.). The absorptions and photocurrent are not computed or used.
 
 coneParams.fov = fov;
 primaArray.fov = fov;
 
+% We generate the cone mosaic with only one frame of the stimulus to save
+% time on the computation.
 iStimNS = ieStimulusMovieCMosaic(rand(100,100,1),coneParams);
 cMosaicNS = iStimNS.cMosaic;
 
 %% Prima
+% We initialize many of the primaArray object properties from the
+% primaParams input structure.
 
-
-primaArray.width = cMosaicNS.width;
-primaArray.height = cMosaicNS.height;
-
+% From input
 primaArray.pixelWidth = pixelWidth;
-
 primaArray.ecc = ecc;
-
 primaArray.pulseFreq = pulseFreq;
 
+% From the dummy cone mosaic
+primaArray.width = cMosaicNS.width;
+primaArray.height = cMosaicNS.height;
 retinalPatchSize = [cMosaicNS.height cMosaicNS.width];
 retinalPatchHeight = cMosaicNS.height;
 retinalPatchWidth = cMosaicNS.width;
-% Electrode array properties
+
+% Electrode array properties derived from dummy cone mosaic
 metersPerPixel = retinalPatchWidth/retinalPatchSize(2);
 
+% Get size of electrode array
 numberElectrodesX = floor(retinalPatchWidth/primaArray.pixelWidth)+1;
 numberElectrodesY = floor(retinalPatchWidth/primaArray.pixelWidth)+1;
 numberElectrodes = numberElectrodesX*numberElectrodesY;
@@ -77,87 +112,17 @@ for xPos = 1:numberElectrodesX
     end
 end
 
-th = (0:1/6:1)'*2*pi;
-scaleFactor = 1e6;
-xh = scaleFactor*primaArray.pixelWidth/2*cos(th);
-yh = scaleFactor*primaArray.pixelWidth/2*sin(th);
-
-% % Plot electrode array
-eaSize = size(primaArray.center);
-% figure;
-hold on;
-for i = 1:eaSize(1)
-    for j = 1:eaSize(2)
-        %         scatter(primaArray.center(i,j,1),primaArray.center(i,j,2));
-        plot(xh+scaleFactor*primaArray.center(i,j,1),yh+scaleFactor*primaArray.center(i,j,2),'r')
-    end
-end
-axis equal
-xlabel('Distance (m)'); ylabel('Distance (m)');
-set(gca,'fontsize',14);
-
-% Build the current stimulation activation window
+%% Build the current stimulation activation window
 % Gaussian activation from center of electrode
 % activationWindow = floor(1e6*retinalPatchSize(2)/numberElectrodesX);
 activationWindow = ceil(size(movieInput,1)/numberElectrodesX);
 primaArray.spatialWeight = fspecial('Gaussian', round(1.5*activationWindow), 1.5*activationWindow/3);
 
-% Visualize Gaussian activation
-% figure; imagesc(primaArray.spatialWeight);
-% figure; surf(primaArray.spatialWeight);
-% xlabel(sprintf('Distance (\\mum)')); ylabel(sprintf('Distance (\\mum)'));
-% title('Gaussian Activation for a Single Electrode'); set(gca,'fontsize',16);
+%% Initialize the bipolar layer
 
-%% Compute electrode activations from image
-% 
-% % Get the full image/movie from the identity outersegment
-% fullStimulus = movieInput;
-% 
-% % Find electrode activations by taking mean within window
-% for xPos = 1:numberElectrodesX
-%     for yPos = 1:numberElectrodesY
-%         % Xcoords of window for stimulus
-%         imageCoordX1 = (activationWindow)*(xPos-1)+1;
-%         imageCoordX2 = (activationWindow)*(xPos);
-%         
-%         % Ycoords of window for stimulus
-%         imageCoordY1 = (activationWindow)*(yPos-1)+1;
-%         imageCoordY2 = (activationWindow)*(yPos);
-%         
-%         if imageCoordX2 > size(fullStimulus,2); imageCoordY2 = size(fullStimulus,2); end;
-%         if imageCoordY2 > size(fullStimulus,1); imageCoordY2 = size(fullStimulus,1); end;
-%         % Pull out piece of stimulus and take mean
-%         electrodeStimulus = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2,:,:));
-%         % primaArray.activation(xPos,yPos,:) = mean(RGB2XWFormat(electrodeStimulus));
-%         
-%         % Implement the local electrode min([e1,e2]) nonlinearity
-%         sizeES = size(electrodeStimulus);
-%         electrodeStimulusL = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:floor(imageCoordX1+activationWindow/2),:,:));
-%         electrodeStimulusR = squeeze(fullStimulus(imageCoordY1:imageCoordY2,floor(imageCoordX1+activationWindow/2)+1:imageCoordX2,:,:));
-%         % primaArray.activation(xPos,yPos,frame) = min([ mean(electrodeStimulus(:,1:floor(sizeES(2)/2))) mean(electrodeStimulus(:,ceil(sizeES(2)/2):sizeES(2)))]);
-%         primaArray.activation(xPos,yPos,:) = min([mean(RGB2XWFormat(electrodeStimulusL)); mean(RGB2XWFormat(electrodeStimulusL))]);
-%     end
-% end
-
-%% Add X Hz spiking of stimulus
-% primaArray.pulseFreq = pulseFreq;
-% % Right now the electrode sampling is at 0.01 s = 100 Hz
-% % Downsample to get 5 Hz
-% szAct = size(primaArray.activation);
-% primaArray.activationDS = zeros(szAct);
-% for iSample = 1:szAct(3)
-%     if mod(iSample,100/primaArray.pulseFreq)==0
-%         primaArray.activationDS(:,:,iSample) = primaArray.activation(:,:,iSample);
-%         primaArray.activationDSoff(:,:,iSample) = 1-primaArray.activation(:,:,iSample);
-%     end
-% end
-% 
-% eaRS = reshape(primaArray.activation,[szAct(1)*szAct(2),szAct(3)]);
-% eaDSRS = reshape(primaArray.activationDS,[szAct(1)*szAct(2),szAct(3)]);
-
-%% Bipolar
 clear bpMosaic
 
+% Build each subtype of bipolar mosaic
 cellType = {'ondiffuse','offdiffuse','onmidget','offmidget','onSBC'};
 for cellTypeInd = 1:4
     clear bpParams
@@ -168,22 +133,25 @@ for cellTypeInd = 1:4
     bpMosaic{cellTypeInd} = bipolar(cMosaicNS, bpParams);
     bpMosaic{cellTypeInd}.set('sRFcenter',1);
     bpMosaic{cellTypeInd}.set('sRFsurround',0);
-%     bpMosaic{cellTypeInd}.compute(cMosaicNS);
 end
-
+% Attach to the prima object
 primaArray.bpMosaic = bpMosaic;
 
-%% RGC
+%% Initialize the RGC layer
+
+% RGC parameters
 clear params rgcParams
 params.eyeRadius = primaArray.ecc;
 params.eyeAngle = 90;
 innerRetina=ir(bpMosaic,params);
 cellType = {'on parasol','off parasol','on midget','off midget'};
 
+% Choose how regular the mosaic is
 rgcParams.centerNoise = 0;
 rgcParams.model = 'LNP';
 %     rgcParams.ellipseParams = [1 1 0];  % Principle, minor and theta
 
+% Generate each mosaic of rgc cell type
 rgcParams.type = cellType{1};
 innerRetina.mosaicCreate(rgcParams);
 rgcParams.type = cellType{2};
@@ -193,6 +161,25 @@ innerRetina.mosaicCreate(rgcParams);
 rgcParams.type = cellType{4};
 innerRetina.mosaicCreate(rgcParams);
 
-% innerRetina.compute(bpMosaic);
-
+% Attach to the primaArray object
 primaArray.innerRetina = innerRetina;
+
+%% Make a figure for the electrode array
+% th = (0:1/6:1)'*2*pi;
+% scaleFactor = 1e6;
+% xh = scaleFactor*primaArray.pixelWidth/2*cos(th);
+% yh = scaleFactor*primaArray.pixelWidth/2*sin(th);
+% 
+% % % Plot electrode array
+% eaSize = size(primaArray.center);
+% % figure;
+% hold on;
+% for i = 1:eaSize(1)
+%     for j = 1:eaSize(2)
+%         %         scatter(primaArray.center(i,j,1),primaArray.center(i,j,2));
+%         plot(xh+scaleFactor*primaArray.center(i,j,1),yh+scaleFactor*primaArray.center(i,j,2),'r')
+%     end
+% end
+% axis equal
+% xlabel('Distance (m)'); ylabel('Distance (m)');
+% set(gca,'fontsize',14);

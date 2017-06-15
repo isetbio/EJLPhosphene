@@ -100,17 +100,6 @@ methods
         
         bpFile = p.Results.bpFile;
         mosaicFile = p.Results.mosaicFile;
-%          = p.Results.        
-        
-%         obj.size
-%         obj.width
-%         obj.center
-%         
-%         obj.spatialWeight
-%         
-%         obj.stimulus
-%         obj.activation
-%         obj.activationDS
                       
         obj.initialize(movieInput,p.Unmatched)
     end
@@ -118,12 +107,12 @@ methods
     obj = initialize(obj, movieInput, primaParams);
     
     % Declare the method for calculating electrode activation
-    irActivationFromElectrode
+    computeElectrode(primaArray, movieInput);
     
-    irGetThreshold
+    computeBipolar(primaArray, cMosaic);    
     
-    irGetLinearRespElectrode
-    
+    computeRGC(primaArray);    
+           
 %     function window(obj)
 %         obj.figureHandle = primaWindow(obj);
 %         % Tip: Retrieve guidata using
@@ -132,7 +121,6 @@ methods
 %     end
     
 end
-
 
 properties (Constant)
 end
