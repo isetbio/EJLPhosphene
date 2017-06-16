@@ -1,5 +1,6 @@
 function makeFigures(primaRecon, destinationFolder)
 
+primaRecon.bpMosaic = bpMosaic;
 
 %%
 cellTypeInd=2;
@@ -21,7 +22,7 @@ axis equal
 axis off
 % xlabel('Distance (m)'); ylabel('Distance (m)');
 % set(gca,'fontsize',14);
-print(gcf,'-dpng','/Users/james/Documents/MATLAB/EJLPhosphene/local/figures/june14/bipolar_offdiff.png')
+% print(gcf,'-dpng','/Users/james/Documents/MATLAB/EJLPhosphene/local/figures/june14/bipolar_offdiff.png')
 %%
 
 %%
@@ -52,11 +53,11 @@ axis off
 title('Electrode Array Activations');
 % xlabel('Distance (m)'); ylabel('Distance (m)');
 set(gca,'fontsize',14);
-print(gcf,'-dpng','/Users/james/Documents/MATLAB/EJLPhosphene/local/figures/june14/electrodeArray.png')
+% print(gcf,'-dpng','/Users/james/Documents/MATLAB/EJLPhosphene/local/figures/june14/electrodeArray.png')
 %%
 
 % primaRecon.innerRetina.mosaic{1}.plot('mosaic')
-primaRecon.innerRetina.mosaic{3}.plot('mosaicFill'); colormap gray;
+innerRetina.mosaic{3}.plot('mosaicFill'); colormap gray;
 % title('On Midget RGC Spikes');
 title('On Midget RGC Spikes');
 % axis equal

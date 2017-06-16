@@ -109,9 +109,9 @@ primaArray.activationDS = zeros(szAct);
 for iSample = 1:size(fullStimulus,3)
     if mod(iSample,100/primaArray.pulseFreq)==0
         primaArray.activationDS(:,:,iSample) = primaArray.activation(:,:,iSample);
-        primaArray.activationDSoff(:,:,iSample) = 1-primaArray.activation(:,:,iSample);
+        primaArray.activationDSoff(:,:,iSample) = primaArray.activation(:,:,iSample);
     end
 end
-
+ph=0;
 % eaRS = reshape(primaArray.activation,[szAct(1)*szAct(2),szAct(3)]);
 % eaDSRS = reshape(primaArray.activationDS,[szAct(1)*szAct(2),szAct(3)]);

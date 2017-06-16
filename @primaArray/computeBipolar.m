@@ -45,7 +45,7 @@ numberElectrodesX = size(primaArray.activation,1);
 numberElectrodesY = size(primaArray.activation,2);
 
 % Five different types of bipolar cells
-cellType = {'ondiffuse','offdiffuse','onmidget','offmidget','onSBC'};
+cellType = {'ondiffuse','ondiffuse','onmidget','onmidget','onSBC'};
 
 for cellTypeInd = 1:4
     %%%%%%%%%%%%%
@@ -61,6 +61,10 @@ for cellTypeInd = 1:4
     bpMosaic{cellTypeInd}.set('sRFcenter',1);
     bpMosaic{cellTypeInd}.set('sRFsurround',0);
     
+end
+
+
+for cellTypeInd = 1%:4
     % Set the cone mosaic current field to either the positive or negative
     % activations depending on bipolar cell type
     switch cellType{cellTypeInd}
@@ -143,7 +147,10 @@ for cellTypeInd = 1:4
         end
     end
     %     figure; imagesc(electrodeStimMask(:,:,10))
-    
+end
+
+
+for cellTypeInd = 1:4
     % Set into the bipolar mosaic
     bpMosaic{cellTypeInd}.set('responseCenter',bpResponseCenterFull);
     bpMosaic{cellTypeInd}.set('responseSurround',bpResponseSurroundFull);
