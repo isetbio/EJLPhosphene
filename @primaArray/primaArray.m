@@ -113,6 +113,8 @@ methods
     
     computeRGC(primaArray);    
            
+    visualizeStimulusAndElectrodeActivation(primaArray, filename, electrodeCoords, fullStimulus, linearActivation, activation, activationDS, activationDSoff);
+
 %     function window(obj)
 %         obj.figureHandle = primaWindow(obj);
 %         % Tip: Retrieve guidata using
