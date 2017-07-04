@@ -21,7 +21,7 @@
 %% Load stimulus movie
 
 stimFrames = 50;
-movieIn = loadHallMovie(stimFrames);
+movieIn = loadHallStimulus(stimFrames);
 
 %% Simulate bipolar and RGC response to prosthesis stimulation
 
