@@ -79,6 +79,8 @@ properties (Access = public)
     %INNERRETINA - holds inner retina object
     innerRetina;
     
+    electrodeCoords;
+    electrodeCoordsFull;
 end
 
 % Public methods
@@ -113,7 +115,8 @@ methods
     
     computeRGC(primaArray);    
            
-    visualizeStimulusAndElectrodeActivation(primaArray, filename, electrodeCoords, fullStimulus, linearActivation, activation, activationDS, activationDSoff);
+    visualizeStimulusAndElectrodeActivation(primaArray, filename, fullStimulus, linearActivation, activation, activationDS, activationDSoff);
+    visualizePhotocurrentAndBpMosaicResponses(primaArray, filename, weights, photocurrentResponse, bpResponseCenter, bpResponseCenterFull);
 
 %     function window(obj)
 %         obj.figureHandle = primaWindow(obj);

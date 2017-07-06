@@ -1,4 +1,4 @@
-function visualizeStimulusAndElectrodeActivation(primaArray, filename, electrodeCoords, fullStimulus, linearActivation, activation, activationDS, activationDSoff)
+function visualizeStimulusAndElectrodeActivation(primaArray, filename, fullStimulus, linearActivation, activation, activationDS, activationDSoff)
 
     % normalize to [0 .. 1]
     maxActivation = max([max(activation(:)) max(linearActivation(:))]);
@@ -11,11 +11,11 @@ function visualizeStimulusAndElectrodeActivation(primaArray, filename, electrode
     activationDSoff = (activationDSoff - minActivation)/(maxActivation-minActivation);
     fullStimulus = (fullStimulus - minStimulus)/(maxStimulus-minStimulus);
     
-    for k = 1:size(electrodeCoords,1)
-        xAxis(k) = electrodeCoords(k,1).x;
+    for k = 1:size(primaArray.electrodeCoords,1)
+        xAxis(k) = primaArray.electrodeCoords(k,1).x;
     end
-    for k = 1:size(electrodeCoords,2)
-        yAxis(k) = electrodeCoords(1,k).y;
+    for k = 1:size(primaArray.electrodeCoords,2)
+        yAxis(k) = primaArray.electrodeCoords(1,k).y;
     end
     electrodeOutline.x = 0.5*(xAxis(2)-xAxis(1))*[-1 -1 1 1 -1];
     electrodeOutline.y = 0.5*(yAxis(2)-yAxis(1))*[-1 1 1 -1 -1];
@@ -41,12 +41,8 @@ function visualizeStimulusAndElectrodeActivation(primaArray, filename, electrode
         subplot('Position', subplotPosVectors(1,1).v);
         imagesc(squeeze(fullStimulus(:,:,f)));
         hold on;
-        for xPos = 1:size(electrodeCoords,1)
-        for yPos = 1:size(electrodeCoords,2)
-            plot(electrodeCoords(xPos,yPos).x, electrodeCoords(xPos,yPos).y, 'x', 'MarkerEdgeColor', electrodeCoords(xPos, yPos).rgb);
-            plot(electrodeCoords(xPos,yPos).x + electrodeOutline.x, electrodeCoords(xPos,yPos).y + electrodeOutline.y, '-', 'Color', electrodeCoords(xPos, yPos).rgb)
-        end
-        end
+        plotElectrodes(primaArray.electrodeCoords, electrodeOutline, true);
+        hold off;
         set(gca, 'CLim', [0 1], 'FontSize', 12);
         axis 'image'
         hold off
@@ -57,11 +53,7 @@ function visualizeStimulusAndElectrodeActivation(primaArray, filename, electrode
         activationFrame = squeeze(linearActivation(:,:,f));
         imagesc(xAxis, yAxis, activationFrame);
         hold on
-        for xPos = 1:size(electrodeCoords,1)
-        for yPos = 1:size(electrodeCoords,2)
-            plot(electrodeCoords(xPos,yPos).x + electrodeOutline.x, electrodeCoords(xPos,yPos).y + electrodeOutline.y, '-', 'Color', electrodeCoords(xPos, yPos).rgb)
-        end
-        end
+        plotElectrodes(primaArray.electrodeCoords, electrodeOutline, true);
         hold off;
         set(gca, 'CLim', [0 1], 'FontSize', 12);
         axis 'image'
@@ -73,11 +65,7 @@ function visualizeStimulusAndElectrodeActivation(primaArray, filename, electrode
         imagesc(activationFrame);
         imagesc(xAxis, yAxis, activationFrame);
         hold on
-        for xPos = 1:size(electrodeCoords,1)
-        for yPos = 1:size(electrodeCoords,2)
-            plot(electrodeCoords(xPos,yPos).x + electrodeOutline.x, electrodeCoords(xPos,yPos).y + electrodeOutline.y, '-', 'Color', electrodeCoords(xPos, yPos).rgb)
-        end
-        end
+        plotElectrodes(primaArray.electrodeCoords, electrodeOutline, true);
         hold off;
         set(gca, 'CLim', [0 1], 'FontSize', 12);
         axis 'image'
@@ -90,11 +78,8 @@ function visualizeStimulusAndElectrodeActivation(primaArray, filename, electrode
         activationFrame = squeeze(activationDS(:,:,f));
         imagesc(xAxis, yAxis, activationFrame);
         hold on
-        for xPos = 1:size(electrodeCoords,1)
-        for yPos = 1:size(electrodeCoords,2)
-            plot(electrodeCoords(xPos,yPos).x + electrodeOutline.x, electrodeCoords(xPos,yPos).y + electrodeOutline.y, '-', 'Color', electrodeCoords(xPos, yPos).rgb)
-        end
-        end
+        plotElectrodes(primaArray.electrodeCoords, electrodeOutline, true);
+        hold off;
         hold off;
         set(gca, 'CLim', [0 1], 'FontSize', 12);
         axis 'image'
@@ -106,11 +91,7 @@ function visualizeStimulusAndElectrodeActivation(primaArray, filename, electrode
         activationFrame = squeeze(activationDSoff(:,:,f));
         imagesc(xAxis, yAxis, activationFrame);
         hold on
-        for xPos = 1:size(electrodeCoords,1)
-        for yPos = 1:size(electrodeCoords,2)
-            plot(electrodeCoords(xPos,yPos).x + electrodeOutline.x, electrodeCoords(xPos,yPos).y + electrodeOutline.y, '-', 'Color', electrodeCoords(xPos, yPos).rgb)
-        end
-        end
+        plotElectrodes(primaArray.electrodeCoords, electrodeOutline, true);
         hold off;
         set(gca, 'CLim', [0 1], 'FontSize', 12);
         axis 'image'
@@ -124,4 +105,17 @@ function visualizeStimulusAndElectrodeActivation(primaArray, filename, electrode
         videoOBJ.writeVideo(getframe(hFig));
     end
     videoOBJ.close();
+end
+
+function plotElectrodes(electrodeCoords, electrodeOutline, showElectrodeCenter)
+    
+    for xPos = 1:size(electrodeCoords,1)
+        for yPos = 1:size(electrodeCoords,2)
+            if (showElectrodeCenter)
+                plot(electrodeCoords(xPos,yPos).x, electrodeCoords(xPos,yPos).y, 'g.', 'MarkerSize', 22, 'Color', electrodeCoords(xPos, yPos).rgb);
+            else
+                plot(electrodeCoords(xPos,yPos).x + electrodeOutline.x, electrodeCoords(xPos,yPos).y + electrodeOutline.y, '-', 'Color', electrodeCoords(xPos, yPos).rgb)
+            end
+        end
+    end
 end

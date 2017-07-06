@@ -1,4 +1,4 @@
-function primaArray = computeBipolar(primaArray, cMosaicNS)
+function primaArray = computeBipolarOLD(primaArray, cMosaicNS)
 %COMPUTEELECTRODE - a function of primaArray for computing the bipolar activations.
 %
 %   primaArray.computeBipolar(cMosaic);
@@ -63,7 +63,7 @@ for cellTypeInd = 1:4
     
 end
 
-fprintf('In computeBipolar\n')
+fprintf('In computeBipolarOLD\n')
 
 for cellTypeInd = 1%:4
     % Set the cone mosaic current field to either the positive or negative
@@ -80,6 +80,7 @@ for cellTypeInd = 1%:4
     bpMosaic{cellTypeInd}.compute(cMosaicNS);
     bpResponseCenterTemp = bpMosaic{cellTypeInd}.responseCenter;
     bpResponseSurroundTemp = bpMosaic{cellTypeInd}.responseSurround;
+    
     
     
     %%%%%%%%%%%%%
@@ -130,26 +131,27 @@ for cellTypeInd = 1%:4
     
     % Compute full spatial scale of bp response due to each electrode
     szWeight = size(primaArray.spatialWeight);
-    for ri = 1:size(primaArray.center,1)-0 % x-pos
-        for ci = 1:size(primaArray.center,2)-0 % y-pos
+    for ri = 1:size(primaArray.center,1)-0
+        for ci = 1:size(primaArray.center,2)-0
             
             % Get center coords of each electrode
             centerCoords = scaleFactor*(centerOffset+[primaArray.center(ri,ci,1),primaArray.center(ri,ci,2)]);
             
             % Compute full spatial scale electrode coords
-            primaArray.electrodeCoordsFull(ci,ri).x = centerCoords(1);
-            primaArray.electrodeCoordsFull(ci,ri).y = centerCoords(2);
-            primaArray.electrodeCoordsFull(ci,ri).rgb = primaArray.electrodeCoords(ci,ri).rgb;
+            primaArray.electrodeCoordsFull(ri,ci).x = centerCoords(1);
+            primaArray.electrodeCoordsFull(ri,ci).y = centerCoords(2);
+            primaArray.electrodeCoordsFull(ri,ci).rgb = primaArray.electrodeCoords(ri,ci).rgb;
+            
             
             % Find indices of bipolar stimulated by this electrode
             rc = [ceil(-szWeight(1)/2+centerCoords(1)) : floor(szWeight(1)/2+centerCoords(1))];
             rcind1 = find(rc>0); rcind2 = find(rc<coneSize(1)); rcind =intersect(rcind1,rcind2); rc = rc(rcind);
             cc = [ceil(-szWeight(2)/2+centerCoords(2)) : floor(szWeight(2)/2+centerCoords(2))];
-            ccind1 = find(cc>0); ccind2 = find(cc<coneSize(2)); ccind =intersect(ccind1,ccind2);  cc = cc(ccind);
+            ccind1 = find(cc>0); ccind2 = find(cc<coneSize(1)); ccind =intersect(ccind1,ccind2); ccind =intersect(ccind1,ccind2); cc = cc(ccind);
             
             % Set spatial attenuation weight
             weightRS = primaArray.spatialWeight(rcind,ccind);
-            allWeights{ci,ri} = weightRS';
+            allWeights{ri,ci} = weightRS;
 
             
             %             bpResponseCenterFull(rc,cc,:) = XW2RGBFormat(weightRS(:)*squeeze(bpResponseCenterTemp(ri,ci,:))',length(rc), length(cc));
@@ -164,7 +166,7 @@ for cellTypeInd = 1%:4
     end
     %     figure; imagesc(electrodeStimMask(:,:,10))
     
-    primaArray.visualizePhotocurrentAndBpMosaicResponses('bipolarActivation',...
+    primaArray.visualizePhotocurrentAndBpMosaicResponses('bipolarActivationOLD',...
         allWeights, currentTemp, bpResponseCenterTemp, bpResponseCenterFull);
     
 end
@@ -180,3 +182,6 @@ end
 primaArray.bpMosaic = bpMosaic;
 
 end
+
+
+

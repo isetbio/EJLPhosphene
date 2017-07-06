@@ -63,9 +63,9 @@ for xPos = 1:numberElectrodesX
         if imageCoordY2 > size(fullStimulus,1); imageCoordY2 = size(fullStimulus,1); end;
         
         % Save electrode coords for visualization
-        electrodeCoords(xPos,yPos).x = 0.5*(imageCoordX1+imageCoordX2);
-        electrodeCoords(xPos,yPos).y = 0.5*(imageCoordY1+imageCoordY2);
-        electrodeCoords(xPos, yPos).rgb = [(xPos-1)/(numberElectrodesX-1)  0.2 (yPos-1)/(numberElectrodesY-1) ];
+        primaArray.electrodeCoords(xPos,yPos).x = 0.5*(imageCoordX1+imageCoordX2);
+        primaArray.electrodeCoords(xPos,yPos).y = 0.5*(imageCoordY1+imageCoordY2);
+        primaArray.electrodeCoords(xPos, yPos).rgb = [(xPos-1)/(numberElectrodesX-1)  0.2 (yPos-1)/(numberElectrodesY-1) ];
         
         % Pull out piece of stimulus and take mean
         electrodeStimulus = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2,:,:));
@@ -125,6 +125,6 @@ ph=0;
 % eaDSRS = reshape(primaArray.activationDS,[szAct(1)*szAct(2),szAct(3)]);
 
 %% Visualize stimulus and electrode activation
-primaArray.visualizeStimulusAndElectrodeActivation('electrodeActivationOLD', electrodeCoords, fullStimulus, linearActivation, primaArray.activation, primaArray.activationDS, primaArray.activationDSoff)
+primaArray.visualizeStimulusAndElectrodeActivation('electrodeActivationOLD', fullStimulus, linearActivation, primaArray.activation, primaArray.activationDS, primaArray.activationDSoff)
 end
 
