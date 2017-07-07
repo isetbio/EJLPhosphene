@@ -46,8 +46,8 @@ spikeResp = mosaicSpikes(primaRecon.innerRetina);
 rd = RdtClient('isetbio');
 rd.crp('/resources/data/istim');
 % filterFile = 'filters_mosaic0_sv75_w1_sh2_may26primaSmall';
-% filterFile = 'filters_mosaic0_sv20_w1_sh2_dr0';
-filterFile = 'filters_mosaic0_sv10_w1_sh2_dr0';
+filterFile = 'filters_mosaic0_sv20_w1_sh2_dr0';
+% filterFile = 'filters_mosaic0_sv10_w1_sh2_dr0';
 data  = rd.readArtifact(filterFile, 'type', 'mat');
 filterMat = data.filterMat; clear data;
 
