@@ -29,7 +29,9 @@ function initialize(primaArray, movieInput, varargin)
 %   - width: width of array
 %   - ecc: eccentricity of retinal patch (degrees)
 %   - pulseFreq: the pulse rate of the electrode array (Hz)
-% 
+%   - pulseDutyCycle: the duty cycle of electrode pulse (%)
+%   - irradianceFraction: the intensity of light projected onto electrodes (%)
+%   - currentDecay: the spatial falloff of current stimulation on bipolars 
 % 
 % 5/2017 JRG (c) isetbio team
 
@@ -45,6 +47,9 @@ addParameter(p,  'height',0,@isscalar);
 addParameter(p,  'width',0,@isscalar);
 addParameter(p,  'ecc',0,@isscalar);
 addParameter(p,  'pulseFreq',0,@isscalar);
+addParameter(p,  'pulseDutyCycle',1,@isscalar);
+addParameter(p,  'irradianceFraction',1,@isscalar);
+addParameter(p,  'currentDecay',2,@isscalar);
 p.KeepUnmatched = true;
 
 p.parse(movieInput,varargin{:});
@@ -55,8 +60,12 @@ fov        = p.Results.fov;
 pixelWidth = p.Results.pixelWidth;
 height      = p.Results.height;
 width       = p.Results.width;
-pulseFreq   = p.Results.pulseFreq;
 ecc         = p.Results.ecc;
+pulseFreq   = p.Results.pulseFreq;
+pulseDutyCycle     = p.Results.pulseDutyCycle;
+irradianceFraction = p.Results.irradianceFraction;
+currentDecay      = p.Results.currentDecay;
+
 
 %% Cone Mosaic
 % Generate the dummy cone mosaic to get the properties of the retinal patch
@@ -78,6 +87,9 @@ cMosaicNS = iStimNS.cMosaic;
 primaArray.pixelWidth = pixelWidth;
 primaArray.ecc = ecc;
 primaArray.pulseFreq = pulseFreq;
+primaArray.pulseDutyCycle = pulseDutyCycle;
+primaArray.irradianceFraction = irradianceFraction;
+primaArray.currentDecay = currentDecay;
 
 % From the dummy cone mosaic
 primaArray.width = cMosaicNS.width;
