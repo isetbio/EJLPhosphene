@@ -16,8 +16,10 @@ cellType = {'on parasol','off parasol','on midget','off midget'};
 
 rgcParams.centerNoise = 0;
 rgcParams.model = 'LNP';
-rgcParams.ellipseParams = [1 1 0];  % Principle, minor and theta
-
+% rgcParams.ellipseParams = [1 1 0];  % Principle, minor and theta
+% rng(20001);
+rgcParams.axisVariance = 0;%.085;
+rgcParams.centerNoise = 0;%.05;
 rgcParams.type = cellType{1};
 innerRetina.mosaicCreate(rgcParams);
 rgcParams.type = cellType{2};
