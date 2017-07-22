@@ -67,6 +67,15 @@ properties (Access = public)
     
     %PULSEFREQ - frequency of electrode activation
     pulseFreq;
+       
+    %PULSEDUTYCYCLE - fraction of cycle pulse is on
+    pulseDutyCycle;        
+    
+    %IRRADIANCEFRACTION - fraction of maximum irradiance
+    irradianceFraction;    
+    
+    %CURRENTDECAY - stdev of gaussian that weighs current spread from electrode
+    currentDecay;
     
     %ACTIVATION - electrode activations in arbitray units
     activation;

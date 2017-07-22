@@ -23,8 +23,14 @@
 
 clear
 % load('filters_mosaic0_sv80_w1_sh4_may22.mat')
-load('/Users/james/Documents/MATLAB/RGC-Reconstruction/dat/current/filters_mosaic0_sv20_w1_sh2_dr0.mat')
+% load('/Users/james/Documents/MATLAB/RGC-Reconstruction/dat/current/filters_mosaic0_sv20_w1_sh2_dr0.mat')
  
+rd = RdtClient('isetbio');
+rd.crp('/resources/data/istim');
+filterFile = 'filters_mosaic0_sv80_w1_sh4_may22.mat';
+data  = rd.readArtifact(filterFile(1:end-4), 'type', 'mat');
+filterMat = data.filterMat; clear data;
+
 % Apply the exponential zeroing filter W_smoothed
 filterHealthyExp = zeroFilter(filterMat,.0075);
 filterHealthyExpzm = (filterHealthyExp-(ones(size(filterHealthyExp,2),1)*mean(filterHealthyExp,2)')');
@@ -44,8 +50,15 @@ save('pinvHealthyZero2.mat','pinvFilterHealthyExp');
 
 %% Load the prosthesis decoding filter and tkae pinv(Wp)
 
-load('filters_mosaic0_sv75_w1_sh2_may25prima.mat')
+% load('filters_mosaic0_sv75_w1_sh2_may25prima.mat')
 % load('filters_mosaic0_sv75_w1_sh2_may26primaSmall.mat')
+
+rd = RdtClient('isetbio');
+rd.crp('/resources/data/istim');
+% filterFile = 'filters_mosaic0_sv75_w1_sh2_may26primaSmall';
+filterFile = 'filters_mosaic0_sv20_w1_sh2_dr0';
+data  = rd.readArtifact(filterFile, 'type', 'mat');
+filterMat = data.filterMat; clear data;
 
 % Smoothing filter to generate Wp_smoothed
 filterMatZero = zeroFilter(filterMat,.01);
