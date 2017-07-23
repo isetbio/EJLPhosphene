@@ -47,21 +47,27 @@ numberElectrodesY = size(primaArray.activation,2);
 % Five different types of bipolar cells
 cellType = {'ondiffuse','ondiffuse','onmidget','onmidget','onSBC'};
 
-for cellTypeInd = 1:4
-    %%%%%%%%%%%%%
-    % Set the electrode activation into the dummy cone mosaic 'current' and
-    % compute the bipolar activations over time at a low spatial resolution
-    
-    % Set bipolar params
-    clear bpParams    
-    bpParams.cellType = cellType{cellTypeInd};    
-    bpParams.ecc = primaArray.ecc;
-    bpParams.rectifyType = 1;
-    bpMosaic{cellTypeInd} = bipolar(cMosaicNS, bpParams);
-    bpMosaic{cellTypeInd}.set('sRFcenter',1);
-    bpMosaic{cellTypeInd}.set('sRFsurround',0);
-    
+
+clear bpL
+
+bpL = bipolarLayer(cMosaicNS);
+
+% Make each type of bipolar mosaic
+cellType = {'on diffuse','off diffuse','on midget','off midget'};%,'on sbc'};
+
+% Stride isn't influencing yet.s
+clear bpMosaicParams
+bpMosaicParams.rectifyType = 1;  % Experiment with this
+bpMosaicParams.spread  = 1;  % RF diameter w.r.t. input samples
+bpMosaicParams.stride  = 1;  % RF diameter w.r.t. input samples
+bpMosaicParams.spreadRatio  = 10;  % RF diameter w.r.t. input samples
+
+% Maybe we need a bipolarLayer.compute that performs this loop
+for cellTypeInd = 1:length(cellType)
+    bpL.mosaic{cellTypeInd} = bipolarMosaic(cMosaicNS, cellType{cellTypeInd}, bpMosaicParams);
+    % bpL.mosaic{cellTypeInd}.compute();
 end
+
 
 fprintf('In computeBipolar\n')
 
@@ -77,9 +83,9 @@ for cellTypeInd = 1%:4
     currentTemp = cMosaicNS.current;
     
     % Apply the temporal filter by computing
-    bpMosaic{cellTypeInd}.compute(cMosaicNS);
-    bpResponseCenterTemp = bpMosaic{cellTypeInd}.responseCenter;
-    bpResponseSurroundTemp = bpMosaic{cellTypeInd}.responseSurround;
+    bpL.mosaic{cellTypeInd}.compute();
+    bpResponseCenterTemp = bpL.mosaic{cellTypeInd}.responseCenter;
+    bpResponseSurroundTemp = bpL.mosaic{cellTypeInd}.responseSurround;
     
     
     %%%%%%%%%%%%%
@@ -98,16 +104,22 @@ for cellTypeInd = 1%:4
     
     cMosaicNS.current(:,:,1) = imresize(primaArray.activationDS(:,:,1),[coneSize],'method','nearest');
     
-
-    % Generate the bpMosaic
-    bpMosaic{cellTypeInd} = bipolar(cMosaicNS, bpParams);
+end
     
+    
+for cellTypeInd = 1:4
+    % Generate the bpMosaic
+    % clear bpL.mosaic{cellTypeInd}
+    bpL.mosaic{cellTypeInd} = bipolarMosaic(cMosaicNS, cellType{cellTypeInd}, bpMosaicParams);
+end
+    
+for cellTypeInd = 1%:4
     % Assume fovea and set relative size to cones as 1:1
-    bpMosaic{cellTypeInd}.set('sRFcenter',1);
-    bpMosaic{cellTypeInd}.set('sRFsurround',0);
+%     bpL.mosaic{cellTypeInd}.set('sRFcenter',1);
+%     bpL.mosaic{cellTypeInd}.set('sRFsurround',0);
     
     % Get the conversion factor from bipolars to microns
-    bpSize = size(bpMosaic{cellTypeInd}.cellLocation);
+    bpSize = size(bpL.mosaic{cellTypeInd}.cellLocation);
     bipolarsPerMicron = bpSize(1)./(1e6*patchSizeMicrons(1));
     
     % Set the scale factor for the spatial attenuation
@@ -172,11 +184,11 @@ end
 
 for cellTypeInd = 1:4
     % Set into the bipolar mosaic
-    bpMosaic{cellTypeInd}.set('responseCenter',bpResponseCenterFull);
-    bpMosaic{cellTypeInd}.set('responseSurround',bpResponseSurroundFull);
+    bpL.mosaic{cellTypeInd}.set('responseCenter',bpResponseCenterFull);
+    bpL.mosaic{cellTypeInd}.set('responseSurround',bpResponseSurroundFull);
 end
 
 % Set into the prima array
-primaArray.bpMosaic = bpMosaic;
+primaArray.bpMosaic = bpL;
 
 end

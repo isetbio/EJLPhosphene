@@ -8,32 +8,36 @@ function primaArray = computeRGC(primaArray)
 % RGC spikes from the bipolar mosaic.
 
 %% Initialize the RGC mosaics
-clear params rgcParams
-params.eyeRadius = primaArray.ecc;
-params.eyeAngle = 90;
-innerRetina=ir(primaArray.bpMosaic,params);
-cellType = {'on parasol','off parasol','on midget','off midget'};
 
+clear rgcL rgcParams
+
+% Create retina ganglion cell layer object
+rgcL = rgcLayer(primaArray.bpMosaic);
+
+% There are various parameters you could set.  We will write a script
+% illustrating these later.  We need a description.
 rgcParams.centerNoise = 0;
-rgcParams.model = 'LNP';
-% rgcParams.ellipseParams = [1 1 0];  % Principle, minor and theta
-% rng(20001);
-rgcParams.axisVariance = 0;%.085;
-rgcParams.centerNoise = 0;%.05;
-rgcParams.type = cellType{1};
-innerRetina.mosaicCreate(rgcParams);
-rgcParams.type = cellType{2};
-innerRetina.mosaicCreate(rgcParams);
-rgcParams.type = cellType{3};
-innerRetina.mosaicCreate(rgcParams);
-rgcParams.type = cellType{4};
-innerRetina.mosaicCreate(rgcParams);
+rgcParams.ellipseParams = [1 1 0];  % Principle, minor and theta
+% mosaicParams.axisVariance = .1;
 
-scaleFactor = 1;
-innerRetina = scaleRF(innerRetina, scaleFactor);
+% diameters = [3 3 1 1 5];  % In microns.
 
-% Compute spikes
+% 27*31+31*35+54*62+63*72
+onPdiameter = 9.4;
+diameters = [onPdiameter onPdiameter*.9 onPdiameter*.5 onPdiameter*.45];  % In microns.
+    
+cellType = {'on parasol','off parasol','on midget','off midget'};%,'onsbc'};
+for ii = 1:length(cellType)
+    rgcParams.rfDiameter = diameters(ii);
+    rgcL.mosaic{ii} = rgcGLM(rgcL, primaArray.bpMosaic.mosaic{ii},cellType{ii},rgcParams);
+end
 
-innerRetina.compute(primaArray.bpMosaic);
+nTrials = 1; rgcL.set('numberTrials',nTrials);
 
-primaArray.innerRetina = innerRetina;
+%% Compute the inner retina response and visualize
+
+% Every mosaic has its input and properties assigned so we should be able
+% to just run through all of them.
+rgcL = rgcL.compute('bipolarScale',50,'bipolarContrast',0.5);
+
+primaArray.innerRetina = rgcL;
