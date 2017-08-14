@@ -61,7 +61,8 @@ bpMosaicParams.rectifyType = 1;  % Experiment with this
 bpMosaicParams.spread  = 1;  % RF diameter w.r.t. input samples
 bpMosaicParams.stride  = 1;  % RF diameter w.r.t. input samples
 bpMosaicParams.spreadRatio  = 10;  % RF diameter w.r.t. input samples
-
+bpMosaicParams.ampCenter = 1.5;%1.3;%1.5 _2
+bpMosaicParams.ampSurround = .5;%1;%.5
 % Maybe we need a bipolarLayer.compute that performs this loop
 for cellTypeInd = 1:length(cellType)
     bpL.mosaic{cellTypeInd} = bipolarMosaic(cMosaicNS, cellType{cellTypeInd}, bpMosaicParams);
@@ -83,6 +84,8 @@ for cellTypeInd = 1%:4
     currentTemp = cMosaicNS.current;
     
     % Apply the temporal filter by computing
+    bpL.mosaic{cellTypeInd}.set('sRFcenter',1);
+    bpL.mosaic{cellTypeInd}.set('sRFsurround',0);
     bpL.mosaic{cellTypeInd}.compute();
     bpResponseCenterTemp = bpL.mosaic{cellTypeInd}.responseCenter;
     bpResponseSurroundTemp = bpL.mosaic{cellTypeInd}.responseSurround;
@@ -181,11 +184,11 @@ for cellTypeInd = 1%:4
     
 end
 
-
+multFactor = [1 1 1 1];
 for cellTypeInd = 1:4
     % Set into the bipolar mosaic
-    bpL.mosaic{cellTypeInd}.set('responseCenter',bpResponseCenterFull);
-    bpL.mosaic{cellTypeInd}.set('responseSurround',bpResponseSurroundFull);
+    bpL.mosaic{cellTypeInd}.set('responseCenter',multFactor(cellTypeInd)*bpResponseCenterFull);
+    bpL.mosaic{cellTypeInd}.set('responseSurround',multFactor(cellTypeInd)*bpResponseSurroundFull);
 end
 
 % Set into the prima array
