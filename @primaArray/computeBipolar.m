@@ -116,7 +116,8 @@ for cellTypeInd = 1%:4
     activationWindow = ceil([coneSize(1),coneSize(2)]/numberElectrodesX);
     
     % Set the spatial attenuation parameter
-    primaArray.spatialWeight = fspecial('Gaussian', round(1.25*activationWindow(1)), activationWindow(1)/2);
+%     primaArray.spatialWeight = fspecial('Gaussian', round(1.25*activationWindow(1)), activationWindow(1)/2);
+    primaArray.spatialWeight = fspecial('Gaussian', round(1.25*activationWindow(1)), activationWindow(1)/primaArray.currentDecay);
     primaArray.spatialWeight = primaArray.spatialWeight./max(primaArray.spatialWeight(:));
     
     % Compute full spatial scale of bp response due to each electrode
