@@ -140,7 +140,7 @@ for cellTypeInd = 1%:4
 
     % Set the spatial attenuation parameter
     shrinkFactor = 1;
-    primaArray.spatialWeight = fspecial('Gaussian', round(1.25*activationWindow(1)), shrinkFactor*activationWindow(1)/2);
+    primaArray.spatialWeight = fspecial('Gaussian', round(2*1.25*activationWindow(1)), shrinkFactor*activationWindow(1)/primaArray.currentDecay);
     primaArray.spatialWeight = primaArray.spatialWeight./max(primaArray.spatialWeight(:));
     
     % Compute full spatial scale of bp response due to each electrode

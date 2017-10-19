@@ -33,7 +33,7 @@ numberElectrodes = numberElectrodesX*numberElectrodesY;
 %% Compute electrode activations from movieInput
 
 % Get the full image/movie from the identity outersegment
-fullStimulus = movieInput;
+fullStimulus = permute(movieInput,[2 1 3]);
 
 % Build the attenuation weighting from the center of the electrode;
 activationWindow = ceil(size(movieInput,1)/numberElectrodesX);
@@ -102,7 +102,7 @@ for xPos = 1:numberElectrodesX
 %             electrodeStimulusR(1:szESR(1),:,1:szESR(2)) = electrodeStimulusRsq;
             % primaArray.activation(xPos,yPos,frame) = min([ mean(electrodeStimulus(:,1:floor(sizeES(2)/2))) mean(electrodeStimulus(:,ceil(sizeES(2)/2):sizeES(2)))]);
             % primaArray.activation(xPos,yPos,:) = min([mean(RGB2XWFormat(electrodeAttenL.*electrodeStimulusL)); mean(RGB2XWFormat(electrodeAttenR.*electrodeStimulusR))]);
-            primaArray.activation(xPos,yPos,:) = min([mean(RGB2XWFormat(1.*electrodeStimulusL),1); mean(RGB2XWFormat(1.*electrodeStimulusR),1)]);
+            primaArray.activation(xPos,yPos,:) = mean([mean(RGB2XWFormat(1.*electrodeStimulusL),1); mean(RGB2XWFormat(1.*electrodeStimulusR),1)]);
             
             %         imElec(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2) = (xPos*yPos)*ones(size(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2)));
         end
