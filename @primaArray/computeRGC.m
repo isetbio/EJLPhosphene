@@ -30,14 +30,17 @@ cellType = {'on parasol','off parasol','on midget','off midget'};%,'onsbc'};
 for ii = 1:length(cellType)
     rgcParams.rfDiameter = diameters(ii);
     rgcL.mosaic{ii} = rgcGLM(rgcL, primaArray.bpMosaic.mosaic{ii},cellType{ii},rgcParams);
+    
+%     td = rgcL.mosaic{ii}.tonicDrive;
+%     rgcL.mosaic{ii}.tonicDrive = 8*td;
 end
 
 nTrials = 1; rgcL.set('numberTrials',nTrials);
 
-%% Compute the inner retina response and visualize
+%% Compute the inne r retina response and visualize
 
 % Every mosaic has its input and properties assigned so we should be able
 % to just run through all of them.
-rgcL.compute('bipolarScale',250,'bipolarContrast',1);
+rgcL.compute('bipolarScale',50,'bipolarContrast',1,'bipolarContrastFlag',0);
 
 primaArray.innerRetina = rgcL;

@@ -7,8 +7,8 @@ function imOut = imgLandoltC(varargin)
 p = inputParser;
 p.addParameter('orientation','up',@ischar);
 p.addParameter('outersize',100,@isnumeric);
-p.addParameter('innersize',50,@isnumeric);
-p.addParameter('gapsize',10,@isnumeric);
+p.addParameter('innersize',60,@isnumeric);
+p.addParameter('gapsize',20,@isnumeric);
 p.parse(varargin{:});
 
 orientation = p.Results.orientation;

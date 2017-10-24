@@ -32,8 +32,8 @@ numberElectrodes = numberElectrodesX*numberElectrodesY;
 
 %% Compute electrode activations from movieInput
 
-% Get the full image/movie from the identity outersegment
-fullStimulus = movieInput;
+% Get the full image/movie 
+fullStimulus = permute(movieInput,[2 1 3]);
 
 % Build the attenuation weighting from the center of the electrode;
 activationWindow = ceil(size(movieInput,1)/numberElectrodesX);
