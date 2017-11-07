@@ -123,6 +123,8 @@ methods
     computeBipolar(primaArray, cMosaic);    
     
     computeRGC(primaArray);    
+    
+    plot(primaArray, plotType, varargin);
            
     visualizeStimulusAndElectrodeActivation(primaArray, filename, fullStimulus, linearActivation, activation, activationDS, activationDSoff);
     visualizePhotocurrentAndBpMosaicResponses(primaArray, filename, weights, photocurrentResponse, bpResponseCenter, bpResponseCenterFull);
