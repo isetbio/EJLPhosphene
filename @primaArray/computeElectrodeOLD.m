@@ -1,4 +1,4 @@
-function primaArray = computeElectrode(primaArray, movieInput)
+function primaArray = computeElectrodeOLD(primaArray, movieInput)
 %COMPUTEELECTRODE - a function of primaArray for computing the electrode activations.
 % 
 %   primaArray.computeElectrode(movieInput);
@@ -24,32 +24,22 @@ function primaArray = computeElectrode(primaArray, movieInput)
 % 5/2017 JRG (c) isetbio team
     
 %% Compute the size of the electrode array 
-eaSize = size(primaArray.center);
-numberElectrodesX = eaSize(2);
-numberElectrodesY = eaSize(1);
+
+numberElectrodesX = floor(primaArray.width/primaArray.pixelWidth)+1;
+numberElectrodesY = floor(primaArray.width/primaArray.pixelWidth)+1;
 numberElectrodes = numberElectrodesX*numberElectrodesY;
 
+activationWindow = ceil(size(movieInput,1)/numberElectrodesX);
 
 %% Compute electrode activations from movieInput
 
-% Get the full image/movie 
-fullStimulus = permute(movieInput,[2 1 3]);
+% Get the full image/movie from the identity outersegment
+fullStimulus = movieInput;
 
 % Build the attenuation weighting from the center of the electrode;
-activationWindow = ceil(size(movieInput,1)/numberElectrodesX);
-electrodeAtten = fspecial('Gaussian', ceil(activationWindow), activationWindow/2);
+electrodeAtten = fspecial('Gaussian', round(activationWindow(1)), activationWindow(1)/2);
 electrodeAtten = electrodeAtten./max(electrodeAtten(:));
 electrodeAttenTemporal = repmat(electrodeAtten,[1 1 size(fullStimulus,3)]);
-
-sampleInterval = size(movieInput,1)/(numberElectrodesX);
-% Elecrode coords in stimulus space
-for xPos = 1:numberElectrodesX
-    for yPos = 1:numberElectrodesY
-        primaArray.electrodeCoords(xPos,yPos).x = (xPos-0.5)*sampleInterval;
-        primaArray.electrodeCoords(xPos,yPos).y = (yPos-0.5)*sampleInterval;
-        primaArray.electrodeCoords(xPos, yPos).rgb = [(xPos-1)/(numberElectrodesX-1)  0.2 (yPos-1)/(numberElectrodesY-1) ];
-    end
-end
 
 % Find electrode activations by taking mean within spatial patch for each
 % electrode over all time steps.
@@ -57,37 +47,43 @@ for xPos = 1:numberElectrodesX
     for yPos = 1:numberElectrodesY
 
         % Xcoords of window for stimulus
-        imageCoordX1 = round(primaArray.electrodeCoords(xPos,yPos).x-activationWindow/2);
-        imageCoordX2 = round(primaArray.electrodeCoords(xPos,yPos).x+activationWindow/2);
+        imageCoordX1 = (activationWindow)*(xPos-1)+1;
+        imageCoordX2 = (activationWindow)*(xPos);
         
         % Ycoords of window for stimulus
-        imageCoordY1 = round(primaArray.electrodeCoords(xPos,yPos).y-activationWindow/2);
-        imageCoordY2 = round(primaArray.electrodeCoords(xPos,yPos).y+activationWindow/2);
+        imageCoordY1 = (activationWindow)*(yPos-1)+1;
+        imageCoordY2 = (activationWindow)*(yPos);
         
         % Check to make sure we are not off of the edge of the stimulus
-        imageCoordX1 = min([ floor(size(fullStimulus,2)-activationWindow/2)  max([1 imageCoordX1]) ]);
-        imageCoordY1 = min([ floor(size(fullStimulus,1)-activationWindow/2)  max([1 imageCoordY1]) ]);
-        imageCoordX2 = min([size(fullStimulus,2) imageCoordX2]);
-        imageCoordY2 = min([size(fullStimulus,2) imageCoordY2]);
-           
+        if imageCoordX1 < 1; imageCoordX1 = 1; end;
+        if imageCoordY1 < 1; imageCoordY1 = 1; end;        
+        if imageCoordX1 > size(fullStimulus,2); imageCoordX1 = size(fullStimulus,2); end;
+        if imageCoordY1 > size(fullStimulus,1); imageCoordY1 = size(fullStimulus,1); end;
+        if imageCoordX2 > size(fullStimulus,2); imageCoordX2 = size(fullStimulus,2); end;
+        if imageCoordY2 > size(fullStimulus,1); imageCoordY2 = size(fullStimulus,1); end;
+        
+        % Save electrode coords for visualization
+        primaArray.electrodeCoords(xPos,yPos).x = 0.5*(imageCoordX1+imageCoordX2);
+        primaArray.electrodeCoords(xPos,yPos).y = 0.5*(imageCoordY1+imageCoordY2);
+        primaArray.electrodeCoords(xPos, yPos).rgb = [(xPos-1)/(numberElectrodesX-1)  0.2 (yPos-1)/(numberElectrodesY-1) ];
+        
         % Pull out piece of stimulus and take mean
         electrodeStimulus = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2,:,:));
-        linearActivation(yPos, xPos,:) = mean(mean(electrodeStimulus,1),2);
+        linearActivation(xPos, yPos,:) = mean(mean(electrodeStimulus,1),2);
         
         % primaArray.activation(xPos,yPos,:) = mean(RGB2XWFormat(electrodeStimulus));                
         
         % Implement the local electrode min([e1,e2]) nonlinearity
         sizeES = size(electrodeStimulus);
-        
-         if imageCoordX1 < (size(fullStimulus,2)-activationWindow/2)
+        if imageCoordX1 < (size(fullStimulus,2)-activationWindow/2)
             % electrodeAttenL = electrodeAttenTemporal(1:length(imageCoordY1:imageCoordY2), 1:length(imageCoordX1:floor(imageCoordX1+activationWindow/2)),:);
             % electrodeAttenR = electrodeAttenTemporal(1:length(imageCoordY1:imageCoordY2),end-length(floor(imageCoordX1+activationWindow/2)+1:imageCoordX2)+1:end,:);
             
-            electrodeStimulusL = (fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:floor(imageCoordX1+activationWindow/2),:,:));
-            electrodeStimulusR = (fullStimulus(imageCoordY1:imageCoordY2,floor(imageCoordX1+activationWindow/2)+1:imageCoordX2,:,:));
+            electrodeStimulusL = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:floor(imageCoordX1+activationWindow/2),:,:));
+            electrodeStimulusR = squeeze(fullStimulus(imageCoordY1:imageCoordY2,floor(imageCoordX1+activationWindow/2)+1:imageCoordX2,:,:));
             % primaArray.activation(xPos,yPos,frame) = min([ mean(electrodeStimulus(:,1:floor(sizeES(2)/2))) mean(electrodeStimulus(:,ceil(sizeES(2)/2):sizeES(2)))]);
             % primaArray.activation(xPos,yPos,:) = min([mean(RGB2XWFormat(electrodeAttenL.*electrodeStimulusL)); mean(RGB2XWFormat(electrodeAttenR.*electrodeStimulusR))]);
-            primaArray.activation(xPos,yPos,:) = min([mean(RGB2XWFormat(1.*electrodeStimulusL),1); mean(RGB2XWFormat(1.*electrodeStimulusR),1)]);
+            primaArray.activation(xPos,yPos,:) = min([mean(RGB2XWFormat(1.*electrodeStimulusL)); mean(RGB2XWFormat(1.*electrodeStimulusR))]);
             
             %         imElec(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2) = (xPos*yPos)*ones(size(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2)));
         else
@@ -95,14 +91,14 @@ for xPos = 1:numberElectrodesX
             % electrodeAttenL = electrodeAttenTemporal(1:length(imageCoordY1:imageCoordY2), 1:length(imageCoordX1:floor(imageCoordX2)),:);
             % electrodeAttenR = electrodeAttenTemporal(1:length(imageCoordY1:imageCoordY2),end-length(floor(imageCoordX1)+1:imageCoordX2)+1:end,:);
   
-            electrodeStimulusL = (fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:floor(imageCoordX2),:,:));
-            electrodeStimulusR = (fullStimulus(imageCoordY1:imageCoordY2,floor(imageCoordX1)+1:imageCoordX2,:,:)); 
-%             szESR = size(((electrodeStimulusRsq)));
-%             electrodeStimulusR = zeros(szESR(1),1,szESR(2));
-%             electrodeStimulusR(1:szESR(1),:,1:szESR(2)) = electrodeStimulusRsq;
+            electrodeStimulusL = squeeze(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:floor(imageCoordX2),:,:));
+            electrodeStimulusRsq = squeeze(fullStimulus(imageCoordY1:imageCoordY2,floor(imageCoordX1)+1:imageCoordX2,:,:)); 
+            szESR = size(((electrodeStimulusRsq)));
+            electrodeStimulusR = zeros(szESR(1),1,szESR(2));
+            electrodeStimulusR(1:szESR(1),:,1:szESR(2)) = electrodeStimulusRsq;
             % primaArray.activation(xPos,yPos,frame) = min([ mean(electrodeStimulus(:,1:floor(sizeES(2)/2))) mean(electrodeStimulus(:,ceil(sizeES(2)/2):sizeES(2)))]);
             % primaArray.activation(xPos,yPos,:) = min([mean(RGB2XWFormat(electrodeAttenL.*electrodeStimulusL)); mean(RGB2XWFormat(electrodeAttenR.*electrodeStimulusR))]);
-            primaArray.activation(xPos,yPos,:) = min([mean(RGB2XWFormat(1.*electrodeStimulusL),1); mean(RGB2XWFormat(1.*electrodeStimulusR),1)]);
+            primaArray.activation(xPos,yPos,:) = min([mean(RGB2XWFormat(1.*electrodeStimulusL)); mean(RGB2XWFormat(1.*electrodeStimulusR))]);
             
             %         imElec(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2) = (xPos*yPos)*ones(size(fullStimulus(imageCoordY1:imageCoordY2,imageCoordX1:imageCoordX2)));
         end
@@ -115,7 +111,7 @@ end
 % primaArray.pulseFreq = pulseFreq;
 % Right now the electrode sampling is at 0.008 s = 125 Hz
 % Downsample if necessary
-primaArray.pulseFreq
+
 szAct = size(primaArray.activation);
 primaArray.activationDS = zeros(szAct);
 for iSample = 1:size(fullStimulus,3)
@@ -129,7 +125,6 @@ ph=0;
 % eaDSRS = reshape(primaArray.activationDS,[szAct(1)*szAct(2),szAct(3)]);
 
 %% Visualize stimulus and electrode activation
-% primaArray.visualizeStimulusAndElectrodeActivation('electrodeActivation', fullStimulus, linearActivation, primaArray.activation, primaArray.activationDS, primaArray.activationDSoff)
-
+primaArray.visualizeStimulusAndElectrodeActivation('electrodeActivationOLD', fullStimulus, linearActivation, primaArray.activation, primaArray.activationDS, primaArray.activationDSoff)
 end
 

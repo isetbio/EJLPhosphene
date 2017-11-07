@@ -36,10 +36,13 @@ primaParams.irradianceFraction = 1;    % Fraction of maximum irradiance
 primaRecon = primaArray(movieIn,primaParams);
 
 primaRecon.compute(movieIn)
+return;
 
 %% Reconstruct - get spikes and decoding filter
  
 spikeResp = mosaicSpikes(primaRecon.innerRetina);
+return;
+
 % save('spikeResp_hallway.mat','spikeResp');
 
 % Remote data toolbox - download decoding filter

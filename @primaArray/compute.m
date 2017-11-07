@@ -26,7 +26,6 @@ movieInput = p.Results.movieInput;
 % (size, etc.). The absorptions and photocurrent are not computed or used.
 
 coneParams.fov = primaArray.fov;
-
 iStimNS = ieStimulusMovieCMosaic(rand(100,100,1),coneParams);
 cMosaicNS = iStimNS.cMosaic;
 

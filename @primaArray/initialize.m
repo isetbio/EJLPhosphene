@@ -130,51 +130,62 @@ end
 activationWindow = ceil(size(movieInput,1)/numberElectrodesX);
 primaArray.spatialWeight = fspecial('Gaussian', round(1.5*activationWindow), 1.5*activationWindow/3);
 
-%% Initialize the bipolar layer
+%% Bipolar
+% Create a set of bipolar cell types in the bipolar mosaic
 
-clear bpMosaic
+clear bpL
 
-% Build each subtype of bipolar mosaic
-cellType = {'ondiffuse','offdiffuse','onmidget','offmidget','onSBC'};
-for cellTypeInd = 1:4
-    clear bpParams
-    bpParams.cellType = cellType{cellTypeInd};
-    
-    bpParams.ecc = primaArray.ecc;
-    bpParams.rectifyType = 1;
-    bpMosaic{cellTypeInd} = bipolar(cMosaicNS, bpParams);
-    bpMosaic{cellTypeInd}.set('sRFcenter',1);
-    bpMosaic{cellTypeInd}.set('sRFsurround',0);
+bpL = bipolarLayer(cMosaicNS);
+
+% Make each type of bipolar mosaic
+cellType = {'on diffuse','off diffuse','on midget','off midget','on sbc'};
+
+% Stride isn't influencing yet.s
+clear bpMosaicParams
+bpMosaicParams.rectifyType = 1;  % Experiment with this
+bpMosaicParams.spread  = 1;  % RF diameter w.r.t. input samples
+bpMosaicParams.stride  = 1;  % RF diameter w.r.t. input samples
+bpMosaicParams.spreadRatio  = 10;  % RF diameter w.r.t. input samples
+
+% Maybe we need a bipolarLayer.compute that performs this loop
+for ii = 1:length(cellType)
+    bpL.mosaic{ii} = bipolarMosaic(cMosaicNS, cellType{ii}, bpMosaicParams);
+    % bpL.mosaic{ii}.compute();
 end
-% Attach to the prima object
-primaArray.bpMosaic = bpMosaic;
 
+% Attach to the prima object
+primaArray.bpMosaic = bpL;
+
+    
 %% Initialize the RGC layer
 
-% RGC parameters
-clear params rgcParams
-params.eyeRadius = primaArray.ecc;
-params.eyeAngle = 90;
-innerRetina=ir(bpMosaic,params);
-cellType = {'on parasol','off parasol','on midget','off midget'};
+% RGC
 
-% Choose how regular the mosaic is
+clear rgcL rgcParams
+
+% Create retina ganglion cell layer object
+rgcL = rgcLayer(bpL);
+
+% There are various parameters you could set.  We will write a script
+% illustrating these later.  We need a description.
 rgcParams.centerNoise = 0;
-rgcParams.model = 'LNP';
-%     rgcParams.ellipseParams = [1 1 0];  % Principle, minor and theta
+rgcParams.ellipseParams = [1 1 0];  % Principle, minor and theta
+% mosaicParams.axisVariance = .1;
 
-% Generate each mosaic of rgc cell type
-rgcParams.type = cellType{1};
-innerRetina.mosaicCreate(rgcParams);
-rgcParams.type = cellType{2};
-innerRetina.mosaicCreate(rgcParams);
-rgcParams.type = cellType{3};
-innerRetina.mosaicCreate(rgcParams);
-rgcParams.type = cellType{4};
-innerRetina.mosaicCreate(rgcParams);
+% 27*31+31*35+54*62+63*72
+onPdiameter = 9.4;
+diameters = [onPdiameter onPdiameter*.9 onPdiameter*.5 onPdiameter*.45];  % In microns.
+
+cellType = {'on parasol','off parasol','on midget','off midget'};
+for ii = 1:length(cellType)
+    rgcParams.rfDiameter = diameters(ii);
+    rgcL.mosaic{ii} = rgcGLM(rgcL, bpL.mosaic{ii},cellType{ii},rgcParams);
+end
+
+nTrials = 1; rgcL.set('numberTrials',nTrials);
 
 % Attach to the primaArray object
-primaArray.innerRetina = innerRetina;
+primaArray.innerRetina = rgcL;
 
 %% Make a figure for the electrode array
 % th = (0:1/6:1)'*2*pi;

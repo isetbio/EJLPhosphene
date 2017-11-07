@@ -8,30 +8,39 @@ function primaArray = computeRGC(primaArray)
 % RGC spikes from the bipolar mosaic.
 
 %% Initialize the RGC mosaics
-clear params rgcParams
-params.eyeRadius = primaArray.ecc;
-params.eyeAngle = 90;
-innerRetina=ir(primaArray.bpMosaic,params);
-cellType = {'on parasol','off parasol','on midget','off midget'};
 
+clear rgcL rgcParams
+
+% Create retina ganglion cell layer object
+rgcL = rgcLayer(primaArray.bpMosaic);
+
+% There are various parameters you could set.  We will write a script
+% illustrating these later.  We need a description.
 rgcParams.centerNoise = 0;
-rgcParams.model = 'LNP';
 rgcParams.ellipseParams = [1 1 0];  % Principle, minor and theta
+% mosaicParams.axisVariance = .1;
 
-rgcParams.type = cellType{1};
-innerRetina.mosaicCreate(rgcParams);
-rgcParams.type = cellType{2};
-innerRetina.mosaicCreate(rgcParams);
-rgcParams.type = cellType{3};
-innerRetina.mosaicCreate(rgcParams);
-rgcParams.type = cellType{4};
-innerRetina.mosaicCreate(rgcParams);
+% diameters = [3 3 1 1 5];  % In microns.
 
-scaleFactor = 1;
-innerRetina = scaleRF(innerRetina, scaleFactor);
+% 27*31+31*35+54*62+63*72
+onPdiameter = 9.4;
+diameters = [onPdiameter onPdiameter*.9 onPdiameter*.5 onPdiameter*.45];  % In microns.
+    
+cellType = {'on parasol','off parasol','on midget','off midget'};%,'onsbc'};
+for ii = 1:length(cellType)
+    rgcParams.rfDiameter = diameters(ii);
+    rgcL.mosaic{ii} = rgcGLM(rgcL, primaArray.bpMosaic.mosaic{ii},cellType{ii},rgcParams);
+    
+%     td = rgcL.mosaic{ii}.tonicDrive;
+%     rgcL.mosaic{ii}.tonicDrive = 8*td;
+end
 
-% Compute spikes
+nTrials = 1; rgcL.set('numberTrials',nTrials);
 
-innerRetina.compute(primaArray.bpMosaic);
+%% Compute the inne r retina response and visualize
 
-primaArray.innerRetina = innerRetina;
+% Every mosaic has its input and properties assigned so we should be able
+% to just run through all of them.
+rgcL.compute('bipolarScale',50,'bipolarContrast',1,'bipolarContrastFlag',0);
+
+primaArray.innerRetina = rgcL;

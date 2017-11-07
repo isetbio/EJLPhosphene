@@ -88,6 +88,8 @@ properties (Access = public)
     %INNERRETINA - holds inner retina object
     innerRetina;
     
+    electrodeCoords;
+    electrodeCoordsFull;
 end
 
 % Public methods
@@ -121,7 +123,12 @@ methods
     computeBipolar(primaArray, cMosaic);    
     
     computeRGC(primaArray);    
+    
+    plot(primaArray, plotType, varargin);
            
+    visualizeStimulusAndElectrodeActivation(primaArray, filename, fullStimulus, linearActivation, activation, activationDS, activationDSoff);
+    visualizePhotocurrentAndBpMosaicResponses(primaArray, filename, weights, photocurrentResponse, bpResponseCenter, bpResponseCenterFull);
+
 %     function window(obj)
 %         obj.figureHandle = primaWindow(obj);
 %         % Tip: Retrieve guidata using

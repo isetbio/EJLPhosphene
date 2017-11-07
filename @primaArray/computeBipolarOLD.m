@@ -1,4 +1,4 @@
-function primaArray = computeBipolar(primaArray, cMosaicNS)
+function primaArray = computeBipolarOLD(primaArray, cMosaicNS)
 %COMPUTEELECTRODE - a function of primaArray for computing the bipolar activations.
 %
 %   primaArray.computeBipolar(cMosaic);
@@ -47,30 +47,23 @@ numberElectrodesY = size(primaArray.activation,2);
 % Five different types of bipolar cells
 cellType = {'ondiffuse','ondiffuse','onmidget','onmidget','onSBC'};
 
-
-clear bpL
-
-bpL = bipolarLayer(cMosaicNS);
-
-% Make each type of bipolar mosaic
-cellType = {'on diffuse','off diffuse','on midget','off midget'};%,'on sbc'};
-
-% Stride isn't influencing yet.s
-clear bpMosaicParams
-bpMosaicParams.rectifyType = 1;  % Experiment with this
-bpMosaicParams.spread  = 1;  % RF diameter w.r.t. input samples
-bpMosaicParams.stride  = 1;  % RF diameter w.r.t. input samples
-bpMosaicParams.spreadRatio  = 10;  % RF diameter w.r.t. input samples
-bpMosaicParams.ampCenter = 1.5;%1.3;%1.5 _2
-bpMosaicParams.ampSurround = .5;%1;%.5
-% Maybe we need a bipolarLayer.compute that performs this loop
-for cellTypeInd = 1:length(cellType)
-    bpL.mosaic{cellTypeInd} = bipolarMosaic(cMosaicNS, cellType{cellTypeInd}, bpMosaicParams);
-    % bpL.mosaic{cellTypeInd}.compute();
+for cellTypeInd = 1:4
+    %%%%%%%%%%%%%
+    % Set the electrode activation into the dummy cone mosaic 'current' and
+    % compute the bipolar activations over time at a low spatial resolution
+    
+    % Set bipolar params
+    clear bpParams    
+    bpParams.cellType = cellType{cellTypeInd};    
+    bpParams.ecc = primaArray.ecc;
+    bpParams.rectifyType = 1;
+    bpMosaic{cellTypeInd} = bipolar(cMosaicNS, bpParams);
+    bpMosaic{cellTypeInd}.set('sRFcenter',1);
+    bpMosaic{cellTypeInd}.set('sRFsurround',0);
+    
 end
 
-
-fprintf('In computeBipolar\n')
+fprintf('In computeBipolarOLD\n')
 
 for cellTypeInd = 1%:4
     % Set the cone mosaic current field to either the positive or negative
@@ -84,11 +77,10 @@ for cellTypeInd = 1%:4
     currentTemp = cMosaicNS.current;
     
     % Apply the temporal filter by computing
-    bpL.mosaic{cellTypeInd}.set('sRFcenter',1);
-    bpL.mosaic{cellTypeInd}.set('sRFsurround',0);
-    bpL.mosaic{cellTypeInd}.compute();
-    bpResponseCenterTemp = bpL.mosaic{cellTypeInd}.responseCenter;
-    bpResponseSurroundTemp = bpL.mosaic{cellTypeInd}.responseSurround;
+    bpMosaic{cellTypeInd}.compute(cMosaicNS);
+    bpResponseCenterTemp = bpMosaic{cellTypeInd}.responseCenter;
+    bpResponseSurroundTemp = bpMosaic{cellTypeInd}.responseSurround;
+    
     
     
     %%%%%%%%%%%%%
@@ -107,22 +99,16 @@ for cellTypeInd = 1%:4
     
     cMosaicNS.current(:,:,1) = imresize(primaArray.activationDS(:,:,1),[coneSize],'method','nearest');
     
-end
-    
-    
-for cellTypeInd = 1:4
+
     % Generate the bpMosaic
-    % clear bpL.mosaic{cellTypeInd}
-    bpL.mosaic{cellTypeInd} = bipolarMosaic(cMosaicNS, cellType{cellTypeInd}, bpMosaicParams);
-end
+    bpMosaic{cellTypeInd} = bipolar(cMosaicNS, bpParams);
     
-for cellTypeInd = 1%:4
     % Assume fovea and set relative size to cones as 1:1
-%     bpL.mosaic{cellTypeInd}.set('sRFcenter',1);
-%     bpL.mosaic{cellTypeInd}.set('sRFsurround',0);
+    bpMosaic{cellTypeInd}.set('sRFcenter',1);
+    bpMosaic{cellTypeInd}.set('sRFsurround',0);
     
     % Get the conversion factor from bipolars to microns
-    bpSize = size(bpL.mosaic{cellTypeInd}.cellLocation);
+    bpSize = size(bpMosaic{cellTypeInd}.cellLocation);
     bipolarsPerMicron = bpSize(1)./(1e6*patchSizeMicrons(1));
     
     % Set the scale factor for the spatial attenuation
@@ -139,32 +125,33 @@ for cellTypeInd = 1%:4
     activationWindow = ceil([coneSize(1),coneSize(2)]/numberElectrodesX);
 
     % Set the spatial attenuation parameter
-    shrinkFactor = 1;
-    primaArray.spatialWeight = fspecial('Gaussian', round(2*1.25*activationWindow(1)), shrinkFactor*activationWindow(1)/2);
+    shrinkFactor = 1.0;
+    primaArray.spatialWeight = fspecial('Gaussian', round(1.25*activationWindow(1)), shrinkFactor*activationWindow(1)/2);
     primaArray.spatialWeight = primaArray.spatialWeight./max(primaArray.spatialWeight(:));
     
     % Compute full spatial scale of bp response due to each electrode
     szWeight = size(primaArray.spatialWeight);
-    for ri = 1:size(primaArray.center,1)-0 % x-pos
-        for ci = 1:size(primaArray.center,2)-0 % y-pos
+    for ri = 1:size(primaArray.center,1)-0
+        for ci = 1:size(primaArray.center,2)-0
             
             % Get center coords of each electrode
             centerCoords = scaleFactor*(centerOffset+[primaArray.center(ri,ci,1),primaArray.center(ri,ci,2)]);
             
             % Compute full spatial scale electrode coords
-            primaArray.electrodeCoordsFull(ci,ri).x = centerCoords(1);
-            primaArray.electrodeCoordsFull(ci,ri).y = centerCoords(2);
-            primaArray.electrodeCoordsFull(ci,ri).rgb = primaArray.electrodeCoords(ci,ri).rgb;
+            primaArray.electrodeCoordsFull(ri,ci).x = centerCoords(1);
+            primaArray.electrodeCoordsFull(ri,ci).y = centerCoords(2);
+            primaArray.electrodeCoordsFull(ri,ci).rgb = primaArray.electrodeCoords(ri,ci).rgb;
+            
             
             % Find indices of bipolar stimulated by this electrode
             rc = [ceil(-szWeight(1)/2+centerCoords(1)) : floor(szWeight(1)/2+centerCoords(1))];
             rcind1 = find(rc>0); rcind2 = find(rc<coneSize(1)); rcind =intersect(rcind1,rcind2); rc = rc(rcind);
             cc = [ceil(-szWeight(2)/2+centerCoords(2)) : floor(szWeight(2)/2+centerCoords(2))];
-            ccind1 = find(cc>0); ccind2 = find(cc<coneSize(2)); ccind =intersect(ccind1,ccind2);  cc = cc(ccind);
+            ccind1 = find(cc>0); ccind2 = find(cc<coneSize(1)); ccind =intersect(ccind1,ccind2); ccind =intersect(ccind1,ccind2); cc = cc(ccind);
             
             % Set spatial attenuation weight
             weightRS = primaArray.spatialWeight(rcind,ccind);
-            allWeights{ci,ri} = weightRS';
+            allWeights{ri,ci} = weightRS;
 
             
             %             bpResponseCenterFull(rc,cc,:) = XW2RGBFormat(weightRS(:)*squeeze(bpResponseCenterTemp(ri,ci,:))',length(rc), length(cc));
@@ -179,19 +166,22 @@ for cellTypeInd = 1%:4
     end
     %     figure; imagesc(electrodeStimMask(:,:,10))
     
-%     primaArray.visualizePhotocurrentAndBpMosaicResponses('bipolarActivation',...
-%         allWeights, currentTemp, bpResponseCenterTemp, bpResponseCenterFull);
+    primaArray.visualizePhotocurrentAndBpMosaicResponses('bipolarActivationOLD',...
+        allWeights, currentTemp, bpResponseCenterTemp, bpResponseCenterFull);
     
 end
 
-multFactor = [1 1 1 1];
+
 for cellTypeInd = 1:4
     % Set into the bipolar mosaic
-    bpL.mosaic{cellTypeInd}.set('responseCenter',multFactor(cellTypeInd)*bpResponseCenterFull);
-    bpL.mosaic{cellTypeInd}.set('responseSurround',multFactor(cellTypeInd)*bpResponseSurroundFull);
+    bpMosaic{cellTypeInd}.set('responseCenter',bpResponseCenterFull);
+    bpMosaic{cellTypeInd}.set('responseSurround',bpResponseSurroundFull);
 end
 
 % Set into the prima array
-primaArray.bpMosaic = bpL;
+primaArray.bpMosaic = bpMosaic;
 
 end
+
+
+
