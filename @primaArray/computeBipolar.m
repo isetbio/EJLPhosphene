@@ -184,11 +184,39 @@ for cellTypeInd = 1%:4
     
 end
 
-multFactor = [1 1 1 1];
+% dropout
+
+percentDeadCells = 0.3
+deadRows = cell(4,1);
+deadCols = cell(4,1);
+numCells = size(bpResponseCenterFull,1)*size(bpResponseCenterFull,2);
+fullIndices = [1:numCells];
+
+for cellTypeInd = 1%:4
+    permIndices = fullIndices(randperm(numCells-1));
+    deadIndices = permIndices(1:ceil(percentDeadCells*(numCells-1)));
+    keepIndices = permIndices(1+ceil(percentDeadCells*(numCells-1)):end);
+    deadIndicesSort = sort(deadIndices,'ascend'); 
+%     keepIndicesSort = sort(keepIndices,'ascend');
+%     [itr,itc]=ind2sub([size(bpResponseCenterFull,1),size(bpResponseCenterFull,2)],deadIndicesSort);
+%     deadRows{cellTypeInd} = itr;
+%     deadCols{cellTypeInd} = itc;
+end
+dead0 = ones(size(bpResponseCenterFull,1),size(bpResponseCenterFull,2));
+dead0(deadIndicesSort)=0; 
+deadFull = XW2RGBFormat(dead0(:)*ones(1,size(bpResponseCenterFull,3)),size(bpResponseCenterFull,1),size(bpResponseCenterFull,2));
+
+multFactor = [1 2 1 2];
 for cellTypeInd = 1:4
     % Set into the bipolar mosaic
-    bpL.mosaic{cellTypeInd}.set('responseCenter',multFactor(cellTypeInd)*bpResponseCenterFull);
-    bpL.mosaic{cellTypeInd}.set('responseSurround',multFactor(cellTypeInd)*bpResponseSurroundFull);
+    bpResponseCenterFullCopy = [];
+    bpResponseCenterSurroundCopy = [];
+    bpResponseCenterFullCopy = bpResponseCenterFull.*deadFull;
+    bpResponseCenterSurroundCopy = bpResponseSurroundFull.*deadFull;
+%     bpResponseCenterFullCopy(deadRows{cellTypeInd}(1:1000), deadCols{cellTypeInd}(1:1000),1) = 0;
+%     bpResponseCenterSurroundCopy(deadRows{cellTypeInd}, deadCols{cellTypeInd},:) = 0;
+    bpL.mosaic{cellTypeInd}.set('responseCenter',multFactor(cellTypeInd)*bpResponseCenterFullCopy);
+    bpL.mosaic{cellTypeInd}.set('responseSurround',multFactor(cellTypeInd)*bpResponseCenterSurroundCopy);
 end
 
 % Set into the prima array

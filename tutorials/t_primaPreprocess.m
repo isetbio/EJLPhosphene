@@ -19,29 +19,69 @@
 % 
 % This does not work yet!
 
+% 
 %% Load the healthy decoding filter and take pinv(W)
 
 clear
 % load('filters_mosaic0_sv80_w1_sh4_may22.mat')
 % load('/Users/james/Documents/MATLAB/RGC-Reconstruction/dat/current/filters_mosaic0_sv20_w1_sh2_dr0.mat')
  
-rd = RdtClient('isetbio');
-rd.crp('/resources/data/istim');
-filterFile = 'filters_mosaic0_sv80_w1_sh4_may22.mat';
-data  = rd.readArtifact(filterFile(1:end-4), 'type', 'mat');
-filterMat = data.filterMat; clear data;
+load('/Users/james/Documents/MATLAB/RGC-Reconstruction/dat/aug29prima70/filtersmosaic0_sv50_w1_sh15_dr0.mat');
+filterNS = filterMat; clear filterMat;
+% rd = RdtClient('isetbio');
+% rd.crp('/resources/data/istim');
+% filterFile = 'filters_mosaic0_sv80_w1_sh4_may22.mat';
+% data  = rd.readArtifact(filterFile(1:end-4), 'type', 'mat');
+% filterMat = data.filterMat; clear data;
 
 % Apply the exponential zeroing filter W_smoothed
-filterHealthyExp = zeroFilter(filterMat,.0075);
-filterHealthyExpzm = (filterHealthyExp-(ones(size(filterHealthyExp,2),1)*mean(filterHealthyExp,2)')');
-filterHealthyExpsc = filterHealthyExpzm./((ones(size(filterHealthyExpzm,2),1)*max(abs(filterHealthyExpzm),[],2)')');
+filterHealthyExp = zeroFilter(filterNS,.06);
+% filterHealthyExp = zeroFilter(filterMat,.0075);
+figure; for fr = 1:25;     subplot(5,5,fr);     filtIm = reshape(filterHealthyExp(2400+fr,:),[100 100]);     imagesc(filtIm);     mabs = max(abs(filtIm(:)));     caxis([-mabs mabs]); colormap parula;  end;
 
-% Visualize
-figure; for fr = 1:25;     subplot(5,5,fr);     filtIm = reshape(filterHealthyExpsc(2400+fr,:),[100 100]);     imagesc(filtIm);     mabs = max(abs(filtIm(:)));     caxis([-mabs mabs]); colormap parula;  end;
-% absFilter = abs(filterHealthyExp);
+% filterHealthyExpsc = filterHealthyExp./((ones(size(filterHealthyExp,2),1)*max(abs(filterHealthyExp),[],2)')');
+filterHealthyExpsc = filterHealthyExp./ (sqrt(ones(size(filterHealthyExp,2),1)*(sum(filterHealthyExp.^2,2))')');
+
+
+% filterHealthyExpzm = (filterHealthyExp-(ones(size(filterHealthyExp,2),1)*mean(filterHealthyExp,2)')');
+% filterHealthyExpsc = filterHealthyExpzm./((ones(size(filterHealthyExpzm,2),1)*max(abs(filterHealthyExpzm),[],2)')');
+% 
+% % Visualize
+% figure; for fr = 1:25;     subplot(5,5,fr);     filtIm = reshape(filterHealthyExpsc(2400+fr,:),[100 100]);     imagesc(filtIm);     mabs = max(abs(filtIm(:)));     caxis([-mabs mabs]); colormap parula;  end;
+% % absFilter = abs(filterHealthyExp);
+
+
+%%
+
+% load('/Users/james/Documents/MATLAB/RGC-Reconstruction/dat/aug29prima70/filtersmosaic0_sv50_w1_sh15_dr0.mat');
+% filterNS = filterMat; clear filterMat
+% load('/Users/james/Documents/MATLAB/RGC-Reconstruction/dat/aug29prima70/filtersmosaic0_sv 5_w1_sh4_dr0_pitch_70_decay_2.mat')
+% filterPros = filterMat;
+
+%%
+  load('/Users/james/Documents/MATLAB/RGC-Reconstruction/dat/aug29prima70/filtersmosaic0_sv 5_w1_sh4_dr0_pitch_70_decay_2.mat')
+  filterPros = filterMat; clear filterMat;
+    filterMatZero = zeroFilter(filterPros,.005);
+    filterMatZerosc = filterMatZero./ (sqrt(ones(size(filterMatZero,2),1)*(sum(filterMatZero.^2,2))')');
+
+    wopt = filterHealthyExpsc\filterMatZerosc;
+    wopt2 = filterMatZerosc\filterHealthyExpsc;
+    
+    woptz = zeroFilter(wopt,.0005);
+%
+
+%%
+
+load('/Users/james/Documents/MATLAB/RGC-Reconstruction/dat/aug29prima70/filtersmosaic0_sv 2_w1_sh3_dr0.mat')
+filter35 = filterMat; clear filterMat;
+   filter35Zero = zeroFilter(filter35,.005);
+    filter35Zerosc = filter35Zero./ (sqrt(ones(size(filter35Zero,2),1)*(sum(filter35Zero.^2,2))')');
+
+    wopt = filterHealthyExpsc\filter35Zerosc;
+  
 
 %% Take pinv(W_smoothed)
-
+filterHealthyExpsc = zeroFilter(filterNS,.01);
 pinvFilterHealthyExp = pinv(filterHealthyExpsc);
 
 figure; imagesc(reshape(pinvFilterHealthyExp(:,100),[100 100]))
@@ -61,7 +101,7 @@ data  = rd.readArtifact(filterFile, 'type', 'mat');
 filterMat = data.filterMat; clear data;
 
 % Smoothing filter to generate Wp_smoothed
-filterMatZero = zeroFilter(filterMat,.01);
+filterMatZero = zeroFilter(filterPros,.001);
 filterMatZerozm = (filterMatZero-(ones(size(filterMatZero,2),1)*mean(filterMatZero,2)')');
 filterMatZerosc = filterMatZerozm./((ones(size(filterMatZerozm,2),1)*max(abs(filterMatZerozm),[],2)')');
 
@@ -76,14 +116,14 @@ figure; imagesc(reshape(filterMatZerosc(100,:),[100 100]))
 
 noLearningImageFilter = pinvFilterHealthyExp*filterMatZero;
 
-noLearningImageFilter2 = filterMatZerosc'*pinvFilterHealthyExp';
+noLearningImageFilter2 = filterMatZero'*pinvFilterHealthyExp';
 % 
 % % figure; imagesc(noLearningImageFilter(1:500,:))
 % % figure; imagesc(reshape(noLearningImageFilter(:,100),[100 100]))
 % % figure; imagesc(reshape(noLearningImageFilter(100,:),[100 100]))
 % % figure; imagesc(reshape(noLearningImageFilter(1001,:),[100 100]))
 % % figure; for fr = 1:25;     subplot(5,5,fr);     filtIm = reshape(noLearningImageFilter(2400+fr,:),[100 100]);     imagesc(filtIm);     mabs = max(abs(filtIm(:)));     caxis([-mabs mabs]); colormap parula;  end;
-% % figure; for fr = 1:25;     subplot(5,5,fr);     filtIm = reshape(noLearningImageFilter(400+fr,:),[100 100]);     imagesc(filtIm);     mabs = max(abs(filtIm(:)));     caxis([-mabs mabs]); colormap parula;  end;
+% % figure; for fr = 1:25;     subplot(5,5,fr);     filtIm = reshape(noLearningImageFilter(100+fr,:),[100 100]);     imagesc(filtIm);     mabs = max(abs(filtIm(:)));     caxis([-mabs mabs]); colormap parula;  end;
 % % figure; for fr = 1:25;     subplot(5,5,fr);     filtIm = reshape(noLearningImageFilter(700+fr,:),[100 100]);     imagesc(filtIm);     mabs = max(abs(filtIm(:)));     caxis([-mabs mabs]); colormap parula;  end;
 % % figure; imagesc(reshape(sum(noLearningImageFilter(:,:).^2),[100 100]))
 % 
@@ -109,7 +149,7 @@ clear vidFrame hallMovieResize
 
 movieFr = movieIn(:,:,100);
 
-movieFrFilt = noLearningImageFilter(:,100)'*movieFr(:);
+movieFrFilt = noLearningImageFilter*movieFr(:);
 figure; imagesc(reshape(movieFrFilt,[100 100]))
 
 %% Try applying the filter and doing some zeroing
