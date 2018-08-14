@@ -31,8 +31,10 @@ for ii = 1:length(cellType)
     rgcParams.rfDiameter = diameters(ii);
     rgcL.mosaic{ii} = rgcGLM(rgcL, primaArray.bpMosaic.mosaic{ii},cellType{ii},rgcParams);
     
-%     td = rgcL.mosaic{ii}.tonicDrive;
-%     rgcL.mosaic{ii}.tonicDrive = 8*td;
+    if (ii == 2) || (ii== 4)
+        td = rgcL.mosaic{ii}.tonicDrive;
+        rgcL.mosaic{ii}.tonicDrive = 2*td;
+    end
 end
 
 nTrials = 1; rgcL.set('numberTrials',nTrials);

@@ -186,37 +186,63 @@ end
 
 % dropout
 
-percentDeadCells = 0.3
-deadRows = cell(4,1);
-deadCols = cell(4,1);
-numCells = size(bpResponseCenterFull,1)*size(bpResponseCenterFull,2);
-fullIndices = [1:numCells];
 
-for cellTypeInd = 1%:4
-    permIndices = fullIndices(randperm(numCells-1));
-    deadIndices = permIndices(1:ceil(percentDeadCells*(numCells-1)));
-    keepIndices = permIndices(1+ceil(percentDeadCells*(numCells-1)):end);
-    deadIndicesSort = sort(deadIndices,'ascend'); 
-%     keepIndicesSort = sort(keepIndices,'ascend');
-%     [itr,itc]=ind2sub([size(bpResponseCenterFull,1),size(bpResponseCenterFull,2)],deadIndicesSort);
-%     deadRows{cellTypeInd} = itr;
-%     deadCols{cellTypeInd} = itc;
-end
+% multFactor = [1 1 1 1];
+% for cellTypeInd = 1:4
+%     % Set into the bipolar mosaic
+%     bpL.mosaic{cellTypeInd}.set('responseCenter',multFactor(cellTypeInd)*bpResponseCenterFull);
+%     bpL.mosaic{cellTypeInd}.set('responseSurround',multFactor(cellTypeInd)*bpResponseSurroundFull);
+% end
+
+% percentDeadCells = 0
+% deadRows = cell(4,1);
+% deadCols = cell(4,1);
+% numCells = size(bpResponseCenterFull,1)*size(bpResponseCenterFull,2);
+% fullIndices = [1:numCells];
+
+% for cellTypeInd = 1%:4
+%     permIndices = fullIndices(randperm(numCells-1));
+%     deadIndices = permIndices(1:ceil(percentDeadCells*(numCells-1)));
+%     keepIndices = permIndices(1+ceil(percentDeadCells*(numCells-1)):end);
+%     deadIndicesSort = sort(deadIndices,'ascend'); 
+% %     keepIndicesSort = sort(keepIndices,'ascend');
+% %     [itr,itc]=ind2sub([size(bpResponseCenterFull,1),size(bpResponseCenterFull,2)],deadIndicesSort);
+% %     deadRows{cellTypeInd} = itr;
+% %     deadCols{cellTypeInd} = itc;
+% end
 dead0 = ones(size(bpResponseCenterFull,1),size(bpResponseCenterFull,2));
-dead0(deadIndicesSort)=0; 
+
+if exist('/Volumes/Lab/Users/james/current/RGC-Reconstruction/dat/deadMask_aug6.mat','file')
+    load('/Volumes/Lab/Users/james/current/RGC-Reconstruction/dat/deadMask_aug6.mat');
+%     dead0 created with 0.1 stdev, here setting to .05
+    dead0 = .5*(dead0 - 1);
+else  
+%     dead0 = ones(size(bpResponseCenterFull,1),size(bpResponseCenterFull,2)) +
+     dead0 = .05*randn(size(bpResponseCenterFull,1),size(bpResponseCenterFull,2));
+% dead0(deadIndicesSort)=0; 
+end
 deadFull = XW2RGBFormat(dead0(:)*ones(1,size(bpResponseCenterFull,3)),size(bpResponseCenterFull,1),size(bpResponseCenterFull,2));
 
-multFactor = [1 2 1 2];
+blurSize = 3;
+convfilt = fspecial('Gaussian',[blurSize,blurSize],.8);
+convfilt(2,2) = 0;
+convfilt = convfilt/sum(convfilt(:));
+cmat = convmtx2(convfilt,[256 256]);
+
+bpResponseCenterFullNoisy = XW2RGBFormat(cmat*RGB2XWFormat(bpResponseCenterFull),size(bpResponseCenterFull,1)+blurSize-1,size(bpResponseCenterFull,2)+blurSize-1);
+bpResponseSurroundFullNoisy = XW2RGBFormat(cmat*RGB2XWFormat(bpResponseSurroundFull),size(bpResponseSurroundFull,1)+blurSize-1,size(bpResponseSurroundFull,2)+blurSize-1);
+
+multFactor = [1 1 1 1];
 for cellTypeInd = 1:4
     % Set into the bipolar mosaic
     bpResponseCenterFullCopy = [];
-    bpResponseCenterSurroundCopy = [];
-    bpResponseCenterFullCopy = bpResponseCenterFull.*deadFull;
-    bpResponseCenterSurroundCopy = bpResponseSurroundFull.*deadFull;
+    bpResponseSurroundCopy = [];
+    bpResponseCenterFullCopy = bpResponseCenterFull + deadFull.*bpResponseCenterFullNoisy(blurSize-1:size(bpResponseCenterFull,1)+blurSize-2,blurSize-1:size(bpResponseCenterFull,1)+blurSize-2,:);
+    bpResponseSurroundCopy = bpResponseSurroundFull + deadFull.*bpResponseSurroundFullNoisy(blurSize-1:size(bpResponseSurroundFull,1)+blurSize-2,blurSize-1:size(bpResponseSurroundFull,1)+blurSize-2,:);
 %     bpResponseCenterFullCopy(deadRows{cellTypeInd}(1:1000), deadCols{cellTypeInd}(1:1000),1) = 0;
 %     bpResponseCenterSurroundCopy(deadRows{cellTypeInd}, deadCols{cellTypeInd},:) = 0;
     bpL.mosaic{cellTypeInd}.set('responseCenter',multFactor(cellTypeInd)*bpResponseCenterFullCopy);
-    bpL.mosaic{cellTypeInd}.set('responseSurround',multFactor(cellTypeInd)*bpResponseCenterSurroundCopy);
+    bpL.mosaic{cellTypeInd}.set('responseSurround',multFactor(cellTypeInd)*bpResponseSurroundCopy);
 end
 
 % Set into the prima array
