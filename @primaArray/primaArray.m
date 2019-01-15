@@ -90,6 +90,8 @@ properties (Access = public)
     
     electrodeCoords;
     electrodeCoordsFull;
+    
+    bipolarNoise;
 end
 
 % Public methods

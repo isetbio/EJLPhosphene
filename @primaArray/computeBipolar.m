@@ -212,33 +212,83 @@ end
 % end
 dead0 = ones(size(bpResponseCenterFull,1),size(bpResponseCenterFull,2));
 
-if exist('/Volumes/Lab/Users/james/current/RGC-Reconstruction/dat/deadMask_aug6.mat','file')
+% if exist('/Volumes/Lab/Users/james/current/RGC-Reconstruction/dat/deadMask_aug6.mat','file')
+%     load('/Volumes/Lab/Users/james/current/RGC-Reconstruction/dat/deadMask_aug6.mat');
+% %     dead0 created with 0.1 stdev, here setting to .05
+%     dead0 = .5*(dead0 - 1);
+% else  
+% %     dead0 = ones(size(bpResponseCenterFull,1),size(bpResponseCenterFull,2)) +
+%      dead0 = .05*randn(size(bpResponseCenterFull,1),size(bpResponseCenterFull,2));
+% % dead0(deadIndicesSort)=0; 
+% end
+bipolarNoise = primaArray.bipolarNoise
+if bipolarNoise == .05
     load('/Volumes/Lab/Users/james/current/RGC-Reconstruction/dat/deadMask_aug6.mat');
 %     dead0 created with 0.1 stdev, here setting to .05
     dead0 = .5*(dead0 - 1);
-else  
-%     dead0 = ones(size(bpResponseCenterFull,1),size(bpResponseCenterFull,2)) +
-     dead0 = .05*randn(size(bpResponseCenterFull,1),size(bpResponseCenterFull,2));
-% dead0(deadIndicesSort)=0; 
+elseif bipolarNoise > 0
+    if exist(['/Volumes/Lab/Users/james/current/RGC-Reconstruction/dat/deadMask_drop_oct24_' sprintf('_dr%.0f',100*bipolarNoise) '.mat'],'file');
+        load(['/Volumes/Lab/Users/james/current/RGC-Reconstruction/dat/deadMask_drop_oct24_' sprintf('_dr%.0f',100*bipolarNoise) '.mat']);
+    else
+%         dead0 = bipolarNoise*randn(size(bpResponseCenterFull,1),size(bpResponseCenterFull,2));
+        
+%         dead0 = imresize(1*randn(size(bpResponseCenterFull,1)/8,size(bpResponseCenterFull,2)/8),[size(bpResponseCenterFull,1)/1,size(bpResponseCenterFull,2)/1],'nearest');
+%         dead0 = zeros(size(bpResponseCenterFull,1),size(bpResponseCenterFull,2),size(bpResponseCenterFull,3));
+%         for kk = 1:size(bpResponseCenterFull,3)
+%             dead0(:,:,kk) = imresize(1*randn(size(bpResponseCenterFull,1)/8,size(bpResponseCenterFull,2)/8),[size(bpResponseCenterFull,1)/1,size(bpResponseCenterFull,2)/1],'nearest');
+%         end
+
+        dead0sm = (1*ones(size(bpResponseCenterFull,1)/8,size(bpResponseCenterFull,2)/8));
+        dead0smXW = RGB2XWFormat(dead0sm);
+        deadInd = randperm(size(dead0smXW,1));
+        dead0smXW(deadInd(1:floor(bipolarNoise*length(deadInd)))) = zeros(size(dead0smXW(deadInd(1:floor(bipolarNoise*length(deadInd))))));
+        dead0sm = XW2RGBFormat(dead0smXW,size(bpResponseCenterFull,1)/8,size(bpResponseCenterFull,2)/8);
+        dead0 = imresize(dead0sm,[size(bpResponseCenterFull,1)/1,size(bpResponseCenterFull,2)/1],'nearest');
+
+        save(['/Volumes/Lab/Users/james/current/RGC-Reconstruction/dat/deadMask_drop_oct24_' sprintf('_dr%.0f',100*bipolarNoise) '.mat'],'dead0');
+    end
+    
+else 
+    dead0 = zeros(size(bpResponseCenterFull,1),size(bpResponseCenterFull,2));
 end
+% deadFull = dead0;
+
+%      dIndShort = randperm(((size(filterMat,1)-2)));
+%         filterMat(1+dIndShort(1:floor(dropout*length(dIndShort))),:) = zeros(size(filterMat(1+dIndShort(1:floor(dropout*length(dIndShort))),:)));
+   
+        
+    
 deadFull = XW2RGBFormat(dead0(:)*ones(1,size(bpResponseCenterFull,3)),size(bpResponseCenterFull,1),size(bpResponseCenterFull,2));
+% 
+% blurSize = 3;
+% convfilt = fspecial('Gaussian',[blurSize,blurSize],.8);
+% convfilt(2,2) = 0;
+% convfilt = convfilt/sum(convfilt(:));
+% cmat = convmtx2(convfilt,[256 256]);
 
-blurSize = 3;
-convfilt = fspecial('Gaussian',[blurSize,blurSize],.8);
-convfilt(2,2) = 0;
-convfilt = convfilt/sum(convfilt(:));
-cmat = convmtx2(convfilt,[256 256]);
+% bpResponseCenterFullNoisy = XW2RGBFormat(cmat*RGB2XWFormat(bpResponseCenterFull),size(bpResponseCenterFull,1)+blurSize-1,size(bpResponseCenterFull,2)+blurSize-1);
+% bpResponseSurroundFullNoisy = XW2RGBFormat(cmat*RGB2XWFormat(bpResponseSurroundFull),size(bpResponseSurroundFull,1)+blurSize-1,size(bpResponseSurroundFull,2)+blurSize-1);
 
-bpResponseCenterFullNoisy = XW2RGBFormat(cmat*RGB2XWFormat(bpResponseCenterFull),size(bpResponseCenterFull,1)+blurSize-1,size(bpResponseCenterFull,2)+blurSize-1);
-bpResponseSurroundFullNoisy = XW2RGBFormat(cmat*RGB2XWFormat(bpResponseSurroundFull),size(bpResponseSurroundFull,1)+blurSize-1,size(bpResponseSurroundFull,2)+blurSize-1);
+% RGB2XWFormat(bpResponseCenterFull)
 
 multFactor = [1 1 1 1];
+
+% meanResp = mean(bpResponseCenterFull(:));
+maxResp = max(bpResponseCenterFull(:));
 for cellTypeInd = 1:4
     % Set into the bipolar mosaic
     bpResponseCenterFullCopy = [];
     bpResponseSurroundCopy = [];
-    bpResponseCenterFullCopy = bpResponseCenterFull + deadFull.*bpResponseCenterFullNoisy(blurSize-1:size(bpResponseCenterFull,1)+blurSize-2,blurSize-1:size(bpResponseCenterFull,1)+blurSize-2,:);
-    bpResponseSurroundCopy = bpResponseSurroundFull + deadFull.*bpResponseSurroundFullNoisy(blurSize-1:size(bpResponseSurroundFull,1)+blurSize-2,blurSize-1:size(bpResponseSurroundFull,1)+blurSize-2,:);
+%     bpResponseCenterFullCopy = (1-deadFull).*bpResponseCenterFull + deadFull.*bpResponseCenterFullNoisy(blurSize-1:size(bpResponseCenterFull,1)+blurSize-2,blurSize-1:size(bpResponseCenterFull,1)+blurSize-2,:);
+%     bpResponseSurroundCopy =  (1-deadFull).*bpResponseSurroundFull + deadFull.*bpResponseSurroundFullNoisy(blurSize-1:size(bpResponseSurroundFull,1)+blurSize-2,blurSize-1:size(bpResponseSurroundFull,1)+blurSize-2,:);
+    
+%     bpResponseCenterFullCopy = bpResponseCenterFull + deadFull*meanResp*10*bipolarNoise;
+%     bpResponseSurroundCopy =  bpResponseSurroundFull +  deadFull*meanResp*10*bipolarNoise;
+
+    bpResponseCenterFullCopy = bpResponseCenterFull.*deadFull;
+    bpResponseSurroundCopy =   bpResponseSurroundFull.*deadFull;
+
+    
 %     bpResponseCenterFullCopy(deadRows{cellTypeInd}(1:1000), deadCols{cellTypeInd}(1:1000),1) = 0;
 %     bpResponseCenterSurroundCopy(deadRows{cellTypeInd}, deadCols{cellTypeInd},:) = 0;
     bpL.mosaic{cellTypeInd}.set('responseCenter',multFactor(cellTypeInd)*bpResponseCenterFullCopy);

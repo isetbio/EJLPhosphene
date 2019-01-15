@@ -50,6 +50,7 @@ addParameter(p,  'pulseFreq',0,@isscalar);
 addParameter(p,  'pulseDutyCycle',1,@isscalar);
 addParameter(p,  'irradianceFraction',1,@isscalar);
 addParameter(p,  'currentDecay',2,@isscalar);
+addParameter(p,  'bipolarNoise',0,@isscalar);
 p.KeepUnmatched = true;
 
 p.parse(movieInput,varargin{:});
@@ -65,7 +66,7 @@ pulseFreq   = p.Results.pulseFreq;
 pulseDutyCycle     = p.Results.pulseDutyCycle;
 irradianceFraction = p.Results.irradianceFraction;
 currentDecay      = p.Results.currentDecay;
-
+bipolarNoise = p.Results.bipolarNoise;
 
 %% Cone Mosaic
 % Generate the dummy cone mosaic to get the properties of the retinal patch
@@ -90,6 +91,7 @@ primaArray.pulseFreq = pulseFreq;
 primaArray.pulseDutyCycle = pulseDutyCycle;
 primaArray.irradianceFraction = irradianceFraction;
 primaArray.currentDecay = currentDecay;
+primaArray.bipolarNoise = bipolarNoise;
 
 % From the dummy cone mosaic
 primaArray.width = cMosaicNS.width;
